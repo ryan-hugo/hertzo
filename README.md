@@ -12,7 +12,7 @@
 
 <p align="center">
   <b><a href="https://ryan-hugo.github.io/hertzo/">Site</a></b> ·
-  <b><a href="https://github.com/ryan-hugo/hertzo/releases/latest">Download</a></b> ·
+  <b><a href="https://github.com/ryan-hugo/hertzo/releases/latest/download/Hertzo.exe">Download</a></b> ·
   <a href="#-recursos">Recursos</a> ·
   <a href="#-segurança">Segurança</a> ·
   <a href="#-perguntas-frequentes">FAQ</a> ·
@@ -98,7 +98,7 @@ O Hertzo é organizado em cinco pilares, como o menu do app.
 
 ## 📥 Instalação
 
-1. Baixe o **`Hertzo.exe`** na [página de releases](https://github.com/ryan-hugo/hertzo/releases/latest). É um arquivo único, sem instalador e sem precisar instalar o .NET.
+1. Baixe o **[`Hertzo.exe`](https://github.com/ryan-hugo/hertzo/releases/latest/download/Hertzo.exe)** (versão mais recente; notas e SHA-256 na [página de releases](https://github.com/ryan-hugo/hertzo/releases/latest)). É um arquivo único, sem instalador e sem precisar instalar o .NET.
 2. Abra. O Windows pede permissão de administrador, que é necessária para mexer em energia, serviços e registro do sistema.
 3. Na primeira vez, o **SmartScreen** pode avisar que o app não é reconhecido (o executável não tem assinatura paga). Clique em **Mais informações › Executar assim mesmo**. Se preferir, confira o SHA-256 publicado na release ou [compile você mesmo](#-compilar).
 
@@ -188,7 +188,7 @@ Hertzo/
   Views/        10 telas em XAML
   Ui/           identidade visual (Theme.xaml), controles próprios e o aviso no jogo
   Assets/       ícone e PresentMon embutido
-tools/          geradores do ícone e do banner
+tools/          geradores do ícone e do banner; estatisticas.ps1 (downloads e visitas)
 docs/           site (GitHub Pages) e imagens
 ```
 </details>
