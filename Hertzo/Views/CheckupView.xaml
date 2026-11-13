@@ -1,0 +1,115 @@
+<UserControl x:Class="Hertzo.Views.CheckupView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:Hertzo.Ui">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Style="{StaticResource PageGrid}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <ui:PageHeader Number="02" Kicker="SEÇÃO 02 — CHECK-UP" Title="DIAGNÓSTICO"
+                           Subtitle="O que realmente pesa no desempenho, em ordem de prioridade. Itens marcados como INFO não entram na nota.">
+                <Button Content="ANALISAR DE NOVO" Style="{StaticResource Btn}" Command="{Binding RefreshCommand}"/>
+            </ui:PageHeader>
+
+            <!-- Placar -->
+            <ui:Plate Grid.Row="1" Reveal="Shutter" Margin="0,0,0,26" Padding="0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Background="{Binding ScoreTone, Converter={StaticResource ToneBrush}}" Padding="26,10,30,8">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Score}" Style="{StaticResource Numeral}" FontSize="92" Foreground="{StaticResource AccentInkBrush}" Margin="0,-14,0,-16"/>
+                            <TextBlock Text="/100" Style="{StaticResource Label}" Foreground="{StaticResource AccentInkBrush}" VerticalAlignment="Bottom" Margin="6,0,0,10"/>
+                        </StackPanel>
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="28,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Summary}" Style="{StaticResource H3}" FontSize="18"/>
+                        <ui:TickRuler Height="16" Ticks="70" Value="{Binding Score}" Tone="{Binding ScoreTone}" Margin="0,12,0,0"/>
+                    </StackPanel>
+                    <Border Grid.Column="2" BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" Padding="26,0">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding BadCount}" Style="{StaticResource Numeral}" FontSize="46" Foreground="{StaticResource BadBrush}" Margin="0,-8,0,-6"/>
+                            <TextBlock Text="PROBLEMAS" Style="{StaticResource Label}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="3" BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" Padding="26,0">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding WarnCount}" Style="{StaticResource Numeral}" FontSize="46" Foreground="{StaticResource WarnBrush}" Margin="0,-8,0,-6"/>
+                            <TextBlock Text="ATENÇÃO" Style="{StaticResource Label}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="4" BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" Padding="26,0,30,0">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding OkCount}" Style="{StaticResource Numeral}" FontSize="46" Foreground="{StaticResource OkBrush}" Margin="0,-8,0,-6"/>
+                            <TextBlock Text="EM ORDEM" Style="{StaticResource Label}"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </ui:Plate>
+
+            <!-- Relatório por grupo -->
+            <ItemsControl Grid.Row="2" ItemsSource="{Binding Groups}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <ui:Plate Reveal="Wipe" Stagger="True" Delay="150" Padding="0" Margin="0,0,0,16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="58"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Background="{StaticResource Bg2Brush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,1,0">
+                                    <TextBlock Text="{Binding Name, Converter={StaticResource Upper}}" Style="{StaticResource Numeral}" FontSize="19"
+                                               Foreground="{StaticResource TextDimBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,16">
+                                        <TextBlock.LayoutTransform><RotateTransform Angle="-90"/></TextBlock.LayoutTransform>
+                                    </TextBlock>
+                                </Border>
+                                <ItemsControl Grid.Column="1" ItemsSource="{Binding Items}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border x:Name="RowBd" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" Padding="22,16" Background="Transparent">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="108"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,3,0,0">
+                                                        <Rectangle Width="10" Height="10" Fill="{Binding Tone, Converter={StaticResource ToneBrush}}" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding StatusLabel}" Style="{StaticResource Label}" Margin="9,0,0,0" VerticalAlignment="Center"
+                                                                   Foreground="{Binding Tone, Converter={StaticResource ToneBrush}}"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1">
+                                                        <TextBlock Text="{Binding Title}" Style="{StaticResource H3}"/>
+                                                        <TextBlock Text="{Binding Detail}" Style="{StaticResource Body}" FontSize="12.5" LineHeight="18" Margin="0,4,0,0"/>
+                                                    </StackPanel>
+                                                    <Button Grid.Column="2" Content="{Binding ActionLabel, Converter={StaticResource Upper}}" Style="{StaticResource BtnPrimary}"
+                                                            VerticalAlignment="Center" Margin="20,0,0,0"
+                                                            Command="{Binding DataContext.FixCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                                            Visibility="{Binding HasAction, Converter={StaticResource BoolVis}}"/>
+                                                </Grid>
+                                            </Border>
+                                            <DataTemplate.Triggers>
+                                                <Trigger SourceName="RowBd" Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="RowBd" Property="Background" Value="{StaticResource Bg2Brush}"/>
+                                                </Trigger>
+                                            </DataTemplate.Triggers>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+                        </ui:Plate>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,537 @@
+<UserControl x:Class="Hertzo.Views.ClipsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:Hertzo.Ui"
+             PreviewKeyDown="OnPreviewKeyDown">
+    <UserControl.Resources>
+        <Style x:Key="SecNum" TargetType="TextBlock" BasedOn="{StaticResource Numeral}">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Width" Value="34"/>
+        </Style>
+        <Style x:Key="SecTitle" TargetType="TextBlock" BasedOn="{StaticResource Label}">
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,2,0,0"/>
+        </Style>
+        <Style x:Key="SubLabel" TargetType="TextBlock" BasedOn="{StaticResource Label}">
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+        <!-- campo de texto no estilo do app -->
+        <Style x:Key="Field" TargetType="TextBox">
+            <Setter Property="FontFamily" Value="{StaticResource FontMono}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="CaretBrush" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Background" Value="{StaticResource Bg2Brush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource LineStrongBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <DataTemplate x:Key="ChoiceChip">
+            <RadioButton Style="{StaticResource Chip}" IsChecked="{Binding IsSelected, Mode=TwoWay}" Padding="13,7">
+                <StackPanel>
+                    <TextBlock Text="{Binding Label}" FontFamily="{StaticResource FontDisplay}" FontStretch="Condensed" FontWeight="Bold" FontSize="16"/>
+                    <TextBlock Text="{Binding Sub}" FontFamily="{StaticResource FontMono}" FontSize="9" Opacity="0.62" Margin="0,1,0,0"
+                               Visibility="{Binding Sub, Converter={StaticResource NullVis}}"/>
+                </StackPanel>
+            </RadioButton>
+        </DataTemplate>
+        <ItemsPanelTemplate x:Key="Wrap"><WrapPanel/></ItemsPanelTemplate>
+        <!-- teclas de um atalho -->
+        <DataTemplate x:Key="KeyCapItem">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock x:Name="Plus" Text="+" Style="{StaticResource Label}" VerticalAlignment="Center" Margin="7,0"/>
+                <Border Style="{StaticResource KeyCap}"><TextBlock Text="{Binding}" Style="{StaticResource Mono}" FontSize="11" FontWeight="Bold"/></Border>
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Value="0">
+                    <Setter TargetName="Plus" Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+        <ItemsPanelTemplate x:Key="Row"><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Style="{StaticResource PageGrid}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <ui:PageHeader Number="06" Kicker="SEÇÃO 06 — CLIPES" Title="REPLAY E GRAVAÇÃO"
+                           Subtitle="Replay guarda os últimos segundos na memória e salva com um atalho; a gravação manual grava direto no disco. Captura pela Windows.Graphics.Capture com o encoder da placa — nada é injetado no jogo.">
+                <Button Content="ABRIR PASTA" Style="{StaticResource Btn}" Command="{Binding OpenFolderCommand}"/>
+            </ui:PageHeader>
+
+            <!-- ================= REPLAY + INSTRUMENTO ================= -->
+            <Grid Grid.Row="1" Margin="0,0,0,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="18"/>
+                    <ColumnDefinition Width="400"/>
+                </Grid.ColumnDefinitions>
+
+                <ui:Plate Reveal="Wipe" Padding="24,20,16,18">
+                    <StackPanel>
+                        <!-- 01 duração -->
+                        <DockPanel Margin="0,0,0,12">
+                            <TextBlock Text="01" Style="{StaticResource SecNum}"/>
+                            <TextBlock Text="QUANTO O REPLAY GUARDA" Style="{StaticResource SecTitle}"/>
+                        </DockPanel>
+                        <WrapPanel>
+                            <ItemsControl ItemsSource="{Binding SecondsOptions}" ItemTemplate="{StaticResource ChoiceChip}" ItemsPanel="{StaticResource Row}"/>
+                            <StackPanel Orientation="Horizontal" Margin="4,0,0,8" VerticalAlignment="Top">
+                                <TextBox Style="{StaticResource Field}" Width="86" Text="{Binding CustomText, UpdateSourceTrigger=PropertyChanged}" ToolTip="Segundos (ex.: 45) ou minutos (ex.: 4min), de 5 s a 10 min">
+                                    <TextBox.InputBindings>
+                                        <KeyBinding Key="Enter" Command="{Binding ApplyCustomCommand}"/>
+                                    </TextBox.InputBindings>
+                                </TextBox>
+                                <Button Content="DEFINIR" Command="{Binding ApplyCustomCommand}" Margin="6,0,0,0">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource BtnGhost}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsCustomSeconds}" Value="True">
+                                                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </StackPanel>
+                        </WrapPanel>
+
+                        <Rectangle Height="1" Fill="{StaticResource LineBrush}" Margin="0,8,8,16"/>
+
+                        <!-- 02 imagem -->
+                        <DockPanel Margin="0,0,0,12">
+                            <TextBlock Text="02" Style="{StaticResource SecNum}"/>
+                            <TextBlock Text="IMAGEM" Style="{StaticResource SecTitle}"/>
+                        </DockPanel>
+                        <Grid Margin="34,0,8,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="QUALIDADE" Style="{StaticResource Label}" Width="92" Margin="0,10,0,0"/>
+                            <ItemsControl Grid.Column="1" ItemsSource="{Binding QualityOptions}" ItemTemplate="{StaticResource ChoiceChip}" ItemsPanel="{StaticResource Wrap}"/>
+                        </Grid>
+                        <Grid Margin="34,0,8,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="QUADROS/S" Style="{StaticResource Label}" Width="92" Margin="0,12,0,0"/>
+                            <ItemsControl Grid.Column="1" ItemsSource="{Binding FpsOptions}" ItemTemplate="{StaticResource ChoiceChip}" ItemsPanel="{StaticResource Wrap}"/>
+                        </Grid>
+                        <Grid Margin="34,0,8,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="RESOLUÇÃO" Style="{StaticResource Label}" Width="92" Margin="0,10,0,0"/>
+                            <ItemsControl Grid.Column="1" ItemsSource="{Binding ResOptions}" ItemTemplate="{StaticResource ChoiceChip}" ItemsPanel="{StaticResource Wrap}"/>
+                        </Grid>
+                        <ui:Pill Text="{Binding Estimate}" Tone="Info" HorizontalAlignment="Left" Margin="34,6,0,0"/>
+
+                        <Rectangle Height="1" Fill="{StaticResource LineBrush}" Margin="0,12,8,16"/>
+
+                        <!-- 03 quando gravar -->
+                        <DockPanel Margin="0,0,8,0">
+                            <ToggleButton DockPanel.Dock="Right" Style="{StaticResource Switch}" IsChecked="{Binding OnlyInGame, Mode=TwoWay}" VerticalAlignment="Top"/>
+                            <TextBlock Text="03" Style="{StaticResource SecNum}" VerticalAlignment="Top"/>
+                            <StackPanel Margin="0,1,20,0">
+                                <TextBlock Text="SÓ GRAVAR COM UM JOGO ABERTO" Style="{StaticResource SecTitle}"/>
+                                <TextBlock Text="O replay começa sozinho quando um jogo da lista abre e para 30 s depois que ele fecha. Desligado, grava a tela o tempo todo enquanto estiver ligado."
+                                           Style="{StaticResource Body}" FontSize="12.5" LineHeight="18" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </StackPanel>
+                </ui:Plate>
+
+                <!-- Instrumento -->
+                <ui:Plate Grid.Column="2" Reveal="Shutter" Delay="120" Magnetic="True" Padding="0" Flash="{Binding PhaseLabel}">
+                    <StackPanel>
+                        <Border Background="{Binding PhaseTone, Converter={StaticResource ToneBrush}}" Padding="22,10,22,8">
+                            <DockPanel>
+                                <Rectangle DockPanel.Dock="Right" Width="10" Height="10" Fill="{StaticResource AccentInkBrush}" VerticalAlignment="Center"
+                                           Visibility="{Binding IsRecording, Converter={StaticResource BoolVis}}">
+                                    <Rectangle.Triggers>
+                                        <EventTrigger RoutedEvent="Loaded">
+                                            <BeginStoryboard>
+                                                <Storyboard RepeatBehavior="Forever">
+                                                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity">
+                                                        <DiscreteDoubleKeyFrame Value="1" KeyTime="0:0:0"/>
+                                                        <DiscreteDoubleKeyFrame Value="0.15" KeyTime="0:0:0.8"/>
+                                                        <DiscreteDoubleKeyFrame Value="1" KeyTime="0:0:1.2"/>
+                                                    </DoubleAnimationUsingKeyFrames>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </EventTrigger>
+                                    </Rectangle.Triggers>
+                                </Rectangle>
+                                <TextBlock Text="{Binding PhaseLabel}" Style="{StaticResource Numeral}" FontSize="26" Foreground="{StaticResource AccentInkBrush}"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Margin="22,8,22,22">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding BigUnit}" Style="{StaticResource Label}" VerticalAlignment="Bottom" Margin="0,0,0,24"/>
+                                <TextBlock Text="{Binding BigValue}" Style="{StaticResource Numeral}" FontSize="118" Foreground="{StaticResource AccentBrush}" Margin="-4,-12,0,-18"/>
+                            </DockPanel>
+                            <TextBlock Text="{Binding Caption}" Style="{StaticResource Label}" Foreground="{StaticResource TextBrush}" Margin="0,0,0,10" TextTrimming="CharacterEllipsis"/>
+                            <ui:TickRuler Height="16" Ticks="60" Value="{Binding Fill}" Tone="Accent"/>
+                            <TextBlock Text="{Binding Spec}" Style="{StaticResource Label}" Margin="0,10,0,0" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding Detail}" Style="{StaticResource Body}" FontSize="12.5" LineHeight="18" Margin="0,10,0,16" MinHeight="54"/>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <ItemsControl ItemsSource="{Binding SaveKeyParts}" ItemTemplate="{StaticResource KeyCapItem}" AlternationCount="10" ItemsPanel="{StaticResource Row}"/>
+                                <TextBlock Text="SALVA O REPLAY" Style="{StaticResource Label}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                                <ItemsControl ItemsSource="{Binding RecordKeyParts}" ItemTemplate="{StaticResource KeyCapItem}" AlternationCount="10" ItemsPanel="{StaticResource Row}"/>
+                                <TextBlock Text="GRAVA / PARA" Style="{StaticResource Label}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="{Binding ToggleLabel}" Command="{Binding ToggleCommand}" Margin="0,0,10,0">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource BtnPrimary}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Armed}" Value="True">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+                                                    <Setter Property="BorderBrush" Value="{StaticResource LineStrongBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                <Button Content="{Binding SaveLabel}" Style="{StaticResource Btn}" Command="{Binding SaveCommand}" IsEnabled="{Binding IsRecording}"/>
+                            </StackPanel>
+                            <Button Content="{Binding ManualLabel}" Command="{Binding ManualCommand}" HorizontalAlignment="Left" Margin="0,10,0,0">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource Btn}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsManual}" Value="True">
+                                                <Setter Property="Background" Value="{StaticResource BadBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{StaticResource BadBrush}"/>
+                                                <Setter Property="Foreground" Value="{StaticResource AccentInkBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </ui:Plate>
+            </Grid>
+
+            <!-- ================= ATALHOS E AVISOS + ARQUIVOS ================= -->
+            <Grid Grid.Row="2" Margin="0,0,0,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="18"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <ui:Plate Reveal="Rise" Delay="180" Padding="24,20,20,18">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,14">
+                            <Button DockPanel.Dock="Right" Content="PADRÃO" Style="{StaticResource BtnGhost}" Command="{Binding ResetKeysCommand}" ToolTip="Volta para Ctrl+Shift+F10 e Ctrl+Shift+F11"/>
+                            <TextBlock Text="04" Style="{StaticResource SecNum}"/>
+                            <TextBlock Text="ATALHOS" Style="{StaticResource SecTitle}"/>
+                        </DockPanel>
+                        <!-- salvar replay -->
+                        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="0,12">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="ALTERAR" Style="{StaticResource BtnGhost}" Command="{Binding EditKeyCommand}" CommandParameter="save" VerticalAlignment="Center"/>
+                                <TextBlock Text="SALVAR REPLAY" Style="{StaticResource Label}" Width="120" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
+                                <Grid>
+                                    <ItemsControl ItemsSource="{Binding SaveKeyParts}" ItemTemplate="{StaticResource KeyCapItem}" AlternationCount="10" ItemsPanel="{StaticResource Row}" VerticalAlignment="Center"
+                                                  Visibility="{Binding CapturingSave, Converter={StaticResource BoolVis}, ConverterParameter=invert}"/>
+                                    <TextBlock Text="APERTE A COMBINAÇÃO… (ESC CANCELA)" Style="{StaticResource Label}" Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"
+                                               Visibility="{Binding CapturingSave, Converter={StaticResource BoolVis}}"/>
+                                </Grid>
+                            </DockPanel>
+                        </Border>
+                        <!-- gravar / parar -->
+                        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,1" Padding="0,12">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="ALTERAR" Style="{StaticResource BtnGhost}" Command="{Binding EditKeyCommand}" CommandParameter="record" VerticalAlignment="Center"/>
+                                <TextBlock Text="GRAVAR / PARAR" Style="{StaticResource Label}" Width="120" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
+                                <Grid>
+                                    <ItemsControl ItemsSource="{Binding RecordKeyParts}" ItemTemplate="{StaticResource KeyCapItem}" AlternationCount="10" ItemsPanel="{StaticResource Row}" VerticalAlignment="Center"
+                                                  Visibility="{Binding CapturingRecord, Converter={StaticResource BoolVis}, ConverterParameter=invert}"/>
+                                    <TextBlock Text="APERTE A COMBINAÇÃO… (ESC CANCELA)" Style="{StaticResource Label}" Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"
+                                               Visibility="{Binding CapturingRecord, Converter={StaticResource BoolVis}}"/>
+                                </Grid>
+                            </DockPanel>
+                        </Border>
+
+                        <DockPanel Margin="0,18,0,12">
+                            <TextBlock Text="05" Style="{StaticResource SecNum}"/>
+                            <TextBlock Text="AVISO NA TELA DO JOGO" Style="{StaticResource SecTitle}"/>
+                        </DockPanel>
+                        <ItemsControl ItemsSource="{Binding OverlayOptions}" ItemTemplate="{StaticResource ChoiceChip}" ItemsPanel="{StaticResource Wrap}" Margin="34,0,0,0"/>
+                        <DockPanel Margin="34,8,0,0">
+                            <ToggleButton DockPanel.Dock="Right" Style="{StaticResource Switch}" IsChecked="{Binding OverlayRec, Mode=TwoWay}"/>
+                            <TextBlock Text="Indicador ● REC durante a gravação manual" Style="{StaticResource Body}" FontSize="12.5" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <DockPanel Margin="34,10,0,0">
+                            <ToggleButton DockPanel.Dock="Right" Style="{StaticResource Switch}" IsChecked="{Binding Sounds, Mode=TwoWay}"/>
+                            <TextBlock Text="Bipes de confirmação" Style="{StaticResource Body}" FontSize="12.5" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <TextBlock Style="{StaticResource Body}" FontSize="11.5" LineHeight="16" Margin="34,12,0,0"
+                                   Text="O aviso aparece por 2,6 s e não rouba o foco nem os cliques. Em tela cheia exclusiva antiga o Windows pode não mostrar nada por cima do jogo — os bipes continuam valendo."/>
+                    </StackPanel>
+                </ui:Plate>
+
+                <ui:Plate Grid.Column="2" Reveal="Rise" Delay="240" Padding="24,20,20,18">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,14">
+                            <TextBlock Text="06" Style="{StaticResource SecNum}"/>
+                            <TextBlock Text="ARQUIVOS" Style="{StaticResource SecTitle}"/>
+                        </DockPanel>
+                        <DockPanel Margin="34,0,0,0">
+                            <Button DockPanel.Dock="Right" Content="TROCAR PASTA" Style="{StaticResource BtnGhost}" Command="{Binding ChooseFolderCommand}" VerticalAlignment="Top"/>
+                            <StackPanel Margin="0,0,16,0">
+                                <TextBlock Text="ONDE SALVAR" Style="{StaticResource Label}" Foreground="{StaticResource TextBrush}"/>
+                                <TextBlock Text="{Binding Folder}" Style="{StaticResource Mono}" FontSize="11.5" Foreground="{StaticResource TextDimBrush}" Margin="0,6,0,8" TextTrimming="CharacterEllipsis"/>
+                                <ui:Pill Text="{Binding DiskLabel}" Tone="{Binding DiskTone}" HorizontalAlignment="Left"/>
+                            </StackPanel>
+                        </DockPanel>
+                        <DockPanel Margin="34,14,0,0">
+                            <ToggleButton DockPanel.Dock="Right" Style="{StaticResource Switch}" IsChecked="{Binding FolderPerGame, Mode=TwoWay}"/>
+                            <StackPanel Margin="0,0,16,0">
+                                <TextBlock Text="SUBPASTA POR JOGO" Style="{StaticResource Label}" Foreground="{StaticResource TextBrush}"/>
+                                <TextBlock Text="Ex.: Hertzo\VALORANT\Hertzo_VALORANT_….mp4" Style="{StaticResource Body}" FontSize="12" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </DockPanel>
+                        <TextBlock Style="{StaticResource Body}" FontSize="11.5" LineHeight="16" Margin="34,16,0,0"
+                                   Text="Vídeo H.264 em MP4: abre em qualquer player, no Discord, no WhatsApp e em editores. Com som do jogo e microfone (AAC)."/>
+                    </StackPanel>
+                </ui:Plate>
+            </Grid>
+
+            <!-- ================= ÁUDIO ================= -->
+            <ui:Plate Grid.Row="3" Reveal="Wipe" Delay="200" Padding="0" Margin="0,0,0,18">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="58"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Background="{StaticResource HatchAccentBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,1,0">
+                        <Border Background="{StaticResource Bg1Brush}" VerticalAlignment="Center" Padding="0,10">
+                            <TextBlock Text="07 · ÁUDIO" Style="{StaticResource Numeral}" FontSize="19" HorizontalAlignment="Center">
+                                <TextBlock.LayoutTransform><RotateTransform Angle="-90"/></TextBlock.LayoutTransform>
+                            </TextBlock>
+                        </Border>
+                    </Border>
+
+                    <Grid Grid.Column="1" Margin="24,20,24,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="28"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="28"/>
+                            <ColumnDefinition Width="260"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- som do jogo -->
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,10">
+                                <ToggleButton DockPanel.Dock="Right" Style="{StaticResource Switch}" IsChecked="{Binding GameAudio, Mode=TwoWay}"/>
+                                <StackPanel>
+                                    <TextBlock Text="SOM DO JOGO" Style="{StaticResource H3}" FontSize="15"/>
+                                    <TextBlock Text="{Binding GameDeviceLabel}" Style="{StaticResource Label}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                            </DockPanel>
+                            <ui:LevelMeter Height="12" Level="{Binding GameLevel}" Margin="0,4,0,10"/>
+                            <DockPanel IsEnabled="{Binding GameAudio}">
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding GameVolumeLabel}" Style="{StaticResource Mono}" FontSize="12" Width="44" TextAlignment="Right" VerticalAlignment="Center"/>
+                                <TextBlock DockPanel.Dock="Left" Text="VOLUME" Style="{StaticResource Label}" Width="62" VerticalAlignment="Center"/>
+                                <Slider Style="{StaticResource Fader}" Minimum="0" Maximum="200" SmallChange="5" LargeChange="10" Value="{Binding GameVolume, Mode=TwoWay}"/>
+                            </DockPanel>
+                            <TextBlock Text="Grava tudo o que sai no seu fone ou caixa de som: jogo, Discord e música. Feche o que não quiser no clipe."
+                                       Style="{StaticResource Body}" FontSize="11.5" LineHeight="16" Margin="0,10,0,0"/>
+                        </StackPanel>
+
+                        <!-- microfone -->
+                        <StackPanel Grid.Column="2">
+                            <DockPanel Margin="0,0,0,10">
+                                <ToggleButton DockPanel.Dock="Right" Style="{StaticResource Switch}" IsChecked="{Binding MicOn, Mode=TwoWay}"/>
+                                <StackPanel>
+                                    <TextBlock Text="MICROFONE" Style="{StaticResource H3}" FontSize="15"/>
+                                    <TextBlock Text="SUA VOZ NO CLIPE" Style="{StaticResource Label}" Margin="0,3,0,0"/>
+                                </StackPanel>
+                            </DockPanel>
+                            <ui:LevelMeter Height="12" Level="{Binding MicLevel}" Margin="0,4,0,10"/>
+                            <StackPanel IsEnabled="{Binding MicOn}">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding MicVolumeLabel}" Style="{StaticResource Mono}" FontSize="12" Width="44" TextAlignment="Right" VerticalAlignment="Center"/>
+                                    <TextBlock DockPanel.Dock="Left" Text="VOLUME" Style="{StaticResource Label}" Width="62" VerticalAlignment="Center"/>
+                                    <Slider Style="{StaticResource Fader}" Minimum="0" Maximum="200" SmallChange="5" LargeChange="10" Value="{Binding MicVolume, Mode=TwoWay}"/>
+                                </DockPanel>
+                                <DockPanel Margin="0,12,0,6">
+                                    <Button DockPanel.Dock="Right" Content="ATUALIZAR" Style="{StaticResource BtnLink}" Command="{Binding RefreshMicsCommand}"/>
+                                    <TextBlock Text="DISPOSITIVO" Style="{StaticResource Label}"/>
+                                </DockPanel>
+                                <ItemsControl ItemsSource="{Binding MicOptions}" ItemsPanel="{StaticResource Wrap}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <RadioButton Style="{StaticResource Chip}" IsChecked="{Binding IsSelected, Mode=TwoWay}" Padding="10,6">
+                                                <TextBlock Text="{Binding Label}" FontFamily="{StaticResource FontMono}" FontSize="10.5" MaxWidth="260" TextTrimming="CharacterEllipsis"/>
+                                            </RadioButton>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- opções -->
+                        <Border Grid.Column="4" BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" Padding="22,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="FAIXAS" Style="{StaticResource Label}" Foreground="{StaticResource TextBrush}" Margin="0,0,0,8"/>
+                                <DockPanel IsEnabled="{Binding MicOn}">
+                                    <ToggleButton DockPanel.Dock="Right" Style="{StaticResource Switch}" IsChecked="{Binding MicTrack, Mode=TwoWay}" VerticalAlignment="Top"/>
+                                    <TextBlock Text="Faixa extra só com o microfone (para edição)" Style="{StaticResource Body}" FontSize="12" LineHeight="16" Margin="0,0,12,0"/>
+                                </DockPanel>
+                                <TextBlock Text="A faixa principal sempre tem jogo + microfone juntos, então o clipe toca certo em qualquer player."
+                                           Style="{StaticResource Body}" FontSize="11.5" LineHeight="16" Margin="0,8,0,16"/>
+                                <Button Content="{Binding TestLabel}" Command="{Binding TestAudioCommand}" HorizontalAlignment="Left">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource Btn}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding TestingAudio}" Value="True">
+                                                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                <TextBlock Text="Liga os medidores por 30 s sem gravar nada. Fale e toque algum som para conferir os níveis."
+                                           Style="{StaticResource Body}" FontSize="11.5" LineHeight="16" Margin="0,8,0,0"/>
+                                <TextBlock Text="AAC 48 KHZ ESTÉREO · 192 KBPS" Style="{StaticResource Label}" Margin="0,12,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </ui:Plate>
+
+            <!-- ================= CLIPES ================= -->
+            <StackPanel Grid.Row="4">
+                <ui:Plate Reveal="Focus" Delay="200" Visibility="{Binding NoClips, Converter={StaticResource BoolVis}}" Margin="0,0,0,18">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="300"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="NENHUM CLIPE AINDA" Style="{StaticResource H2}" FontSize="30"/>
+                            <TextBlock Text="Os clipes que você salvar aparecem aqui, com miniatura." Style="{StaticResource Body}" Margin="0,8,24,0"/>
+                        </StackPanel>
+                        <UniformGrid Grid.Column="1" Columns="3">
+                            <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" Padding="20,0">
+                                <StackPanel>
+                                    <TextBlock Text="01" Style="{StaticResource Numeral}" FontSize="34" Foreground="{StaticResource AccentBrush}"/>
+                                    <TextBlock Text="Ligue o replay. Com “só com jogo aberto”, ele espera o jogo abrir." Style="{StaticResource Body}" FontSize="12.5" LineHeight="18"/>
+                                </StackPanel>
+                            </Border>
+                            <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" Padding="20,0">
+                                <StackPanel>
+                                    <TextBlock Text="02" Style="{StaticResource Numeral}" FontSize="34" Foreground="{StaticResource AccentBrush}"/>
+                                    <TextBlock Text="Fez uma jogada boa? Aperte CTRL + SHIFT + F10. Dois bipes: salvo." Style="{StaticResource Body}" FontSize="12.5" LineHeight="18"/>
+                                </StackPanel>
+                            </Border>
+                            <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" Padding="20,0">
+                                <StackPanel>
+                                    <TextBlock Text="03" Style="{StaticResource Numeral}" FontSize="34" Foreground="{StaticResource AccentBrush}"/>
+                                    <TextBlock Text="Quer saber quanto custa? Meça o FPS na Medição com o replay ligado e desligado." Style="{StaticResource Body}" FontSize="12.5" LineHeight="18"/>
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
+                    </Grid>
+                </ui:Plate>
+
+                <DockPanel Margin="0,0,0,12" Visibility="{Binding HasClips, Converter={StaticResource BoolVis}}">
+                    <TextBlock DockPanel.Dock="Right" Text="VÍDEO H.264 + ÁUDIO AAC" Style="{StaticResource Label}" VerticalAlignment="Center"/>
+                    <TextBlock Text="CLIPES SALVOS" Style="{StaticResource Numeral}" FontSize="22"/>
+                </DockPanel>
+                <ItemsControl ItemsSource="{Binding Clips}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate><UniformGrid Columns="3" VerticalAlignment="Top"/></ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <ui:Plate Reveal="Rise" Stagger="True" Padding="0" Margin="0,0,16,16">
+                                <StackPanel>
+                                    <Grid>
+                                        <Border Background="{StaticResource Bg2Brush}">
+                                            <Border.Height>
+                                                <Binding RelativeSource="{RelativeSource Self}" Path="ActualWidth" Converter="{x:Static ui:AspectConverter.Instance}"/>
+                                            </Border.Height>
+                                            <Grid>
+                                                <Rectangle Fill="{StaticResource HatchMuteBrush}" Visibility="{Binding HasThumb, Converter={StaticResource BoolVis}, ConverterParameter=invert}"/>
+                                                <Image Source="{Binding Thumb}" Stretch="UniformToFill"/>
+                                            </Grid>
+                                        </Border>
+                                        <Border Background="{StaticResource Bg0Brush}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Padding="8,3" Margin="0,0,10,10">
+                                            <TextBlock Text="{Binding Duration}" Style="{StaticResource Mono}" FontSize="11" FontWeight="Bold"/>
+                                        </Border>
+                                        <Button HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10,0,0,10" Cursor="Hand" ToolTip="Assistir"
+                                                Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="B" Width="34" Height="34" Background="{StaticResource AccentBrush}">
+                                                        <Path Data="M0,0 L10,6 L0,12 Z" Fill="{StaticResource AccentInkBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,0,0,0"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="B" Property="Background" Value="{StaticResource AccentHoverBrush}"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </Grid>
+                                    <StackPanel Margin="16,12,16,14">
+                                        <TextBlock Text="{Binding Title}" Style="{StaticResource H3}" FontSize="15" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                                        <TextBlock Style="{StaticResource Label}" Margin="0,4,0,10">
+                                            <Run Text="{Binding WhenLabel, Mode=OneWay}"/><Run Text="  ·  "/><Run Text="{Binding Meta, Mode=OneWay}"/>
+                                        </TextBlock>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Content="PASTA" Style="{StaticResource BtnGhost}" Margin="0,0,8,0"
+                                                    Command="{Binding DataContext.RevealCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                            <Button Content="APAGAR" Style="{StaticResource BtnGhost}"
+                                                    Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                            </ui:Plate>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

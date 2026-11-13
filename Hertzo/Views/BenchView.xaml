@@ -1,0 +1,530 @@
+<UserControl x:Class="Hertzo.Views.BenchView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:Hertzo.Ui">
+    <UserControl.Resources>
+        <!-- cabeçalho de seção dentro da placa: número laranja + título + fio -->
+        <Style x:Key="SecNum" TargetType="TextBlock" BasedOn="{StaticResource Numeral}">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Width" Value="34"/>
+        </Style>
+        <Style x:Key="SecTitle" TargetType="TextBlock" BasedOn="{StaticResource Label}">
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,2,0,0"/>
+        </Style>
+        <DataTemplate x:Key="TargetChip">
+            <RadioButton Style="{StaticResource Chip}" IsChecked="{Binding IsSelected, Mode=TwoWay}" ToolTip="{Binding Exe}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding Short}" FontFamily="{StaticResource FontDisplay}" FontStretch="Condensed" FontWeight="Bold"
+                               FontSize="22" MinWidth="40" VerticalAlignment="Center" Margin="0,-2,10,-2"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Name}" FontFamily="{StaticResource FontUi}" FontStretch="SemiCondensed" FontWeight="SemiBold" FontSize="13"
+                                   MaxWidth="190" TextTrimming="CharacterEllipsis"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                            <Rectangle Width="6" Height="6" Fill="{StaticResource OkBrush}" VerticalAlignment="Center" Margin="0,0,5,0"
+                                       Visibility="{Binding IsRunning, Converter={StaticResource BoolVis}}"/>
+                            <TextBlock Text="{Binding Status}" FontFamily="{StaticResource FontMono}" FontSize="9" Opacity="0.62"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </RadioButton>
+        </DataTemplate>
+        <Style x:Key="StatNum" TargetType="TextBlock" BasedOn="{StaticResource Numeral}">
+            <Setter Property="FontSize" Value="46"/>
+            <Setter Property="Margin" Value="0,-8,0,-6"/>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Style="{StaticResource PageGrid}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <ui:PageHeader Number="05" Kicker="SEÇÃO 05 — MEDIÇÃO" Title="BANCADA DE FPS"
+                           Subtitle="Mede FPS médio, 1% low e engasgos com o PresentMon da Intel e compara antes × depois. Ele só lê eventos de desempenho do Windows: não injeta nada no jogo.">
+                <Button Content="ATUALIZAR LISTA" Style="{StaticResource Btn}" Command="{Binding RefreshTargetsCommand}"/>
+            </ui:PageHeader>
+
+            <!-- ================= PREPARAÇÃO + INSTRUMENTO ================= -->
+            <Grid Grid.Row="1" Margin="0,0,0,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="18"/>
+                    <ColumnDefinition Width="400"/>
+                </Grid.ColumnDefinitions>
+
+                <ui:Plate Reveal="Wipe" Padding="24,20,16,16">
+                    <StackPanel>
+                        <!-- 01 jogo -->
+                        <DockPanel Margin="0,0,0,12">
+                            <TextBlock DockPanel.Dock="Right" Text="PROCURANDO…" Style="{StaticResource Label}" Foreground="{StaticResource AccentBrush}"
+                                       Visibility="{Binding LoadingTargets, Converter={StaticResource BoolVis}}" Margin="0,0,8,0"/>
+                            <TextBlock Text="01" Style="{StaticResource SecNum}"/>
+                            <TextBlock Text="O QUE MEDIR" Style="{StaticResource SecTitle}"/>
+                        </DockPanel>
+                        <ItemsControl ItemsSource="{Binding GameTargets}" ItemTemplate="{StaticResource TargetChip}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+
+                        <!-- outros programas abertos (recolhido) -->
+                        <ToggleButton IsChecked="{Binding ShowOthers, Mode=TwoWay}" Cursor="Hand" FocusVisualStyle="{x:Null}" HorizontalAlignment="Left" Margin="0,4,0,6"
+                                      Visibility="{Binding HasOthers, Converter={StaticResource BoolVis}}">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <StackPanel Orientation="Horizontal" Background="Transparent">
+                                        <TextBlock x:Name="Sign" Text="+" FontFamily="{StaticResource FontMono}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" Width="16"/>
+                                        <TextBlock x:Name="T" Text="{Binding OthersLabel}" Style="{StaticResource Label}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="Sign" Property="Text" Value="−"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="T" Property="Foreground" Value="{StaticResource TextBrush}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                        <ItemsControl ItemsSource="{Binding OtherTargets}" ItemTemplate="{StaticResource TargetChip}" Margin="0,4,0,0"
+                                      Visibility="{Binding ShowOthers, Converter={StaticResource BoolVis}}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+
+                        <Rectangle Height="1" Fill="{StaticResource LineBrush}" Margin="0,8,8,16"/>
+
+                        <!-- 02 duração -->
+                        <Grid Margin="0,0,8,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <DockPanel Margin="0,0,0,12">
+                                    <TextBlock Text="02" Style="{StaticResource SecNum}"/>
+                                    <TextBlock Text="DURAÇÃO" Style="{StaticResource SecTitle}"/>
+                                </DockPanel>
+                                <ItemsControl ItemsSource="{Binding Durations}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <RadioButton Style="{StaticResource Chip}" IsChecked="{Binding IsSelected, Mode=TwoWay}" Padding="14,7">
+                                                <TextBlock Text="{Binding Label}" FontFamily="{StaticResource FontDisplay}" FontStretch="Condensed" FontWeight="Bold" FontSize="18"/>
+                                            </RadioButton>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <!-- 03 método -->
+                            <Border Grid.Column="1" BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" Margin="28,0,0,8" Padding="24,0,0,0">
+                                <StackPanel>
+                                    <DockPanel Margin="0,0,0,10">
+                                        <TextBlock Text="03" Style="{StaticResource SecNum}"/>
+                                        <TextBlock Text="MÉTODO" Style="{StaticResource SecTitle}"/>
+                                    </DockPanel>
+                                    <TextBlock Text="{Binding MethodText}" Style="{StaticResource Body}" FontSize="12.5" LineHeight="18"/>
+                                    <TextBlock Text="Meça duas vezes do mesmo jeito antes de mudar algo: assim você vê quanto o resultado varia sozinho."
+                                               Style="{StaticResource Body}" FontSize="12.5" LineHeight="18" Margin="0,6,0,10"/>
+                                    <ui:Pill Text="SEM INJEÇÃO · COMPATÍVEL COM ANTI-CHEAT" Tone="Ok" HorizontalAlignment="Left"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </ui:Plate>
+
+                <!-- Instrumento -->
+                <ui:Plate Grid.Column="2" Reveal="Shutter" Delay="120" Magnetic="True" Padding="0" Flash="{Binding PhaseLabel}">
+                    <StackPanel>
+                        <Border Background="{Binding PhaseTone, Converter={StaticResource ToneBrush}}" Padding="22,10,22,8">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding TimeLabel}" FontFamily="{StaticResource FontMono}" FontSize="12" FontWeight="Bold"
+                                           Foreground="{StaticResource AccentInkBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding PhaseLabel}" Style="{StaticResource Numeral}" FontSize="26" Foreground="{StaticResource AccentInkBrush}"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Margin="22,8,22,22">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding BigUnit}" Style="{StaticResource Label}" VerticalAlignment="Bottom" Margin="0,0,0,24"/>
+                                <TextBlock Text="{Binding BigValue}" Style="{StaticResource Numeral}" FontSize="118" Foreground="{StaticResource AccentBrush}" Margin="-4,-12,0,-18"/>
+                            </DockPanel>
+                            <TextBlock Text="{Binding Caption}" Style="{StaticResource Label}" Foreground="{StaticResource TextBrush}" Margin="0,0,0,10" TextTrimming="CharacterEllipsis"/>
+                            <ui:TickRuler Height="16" Ticks="60" Value="{Binding Progress}" Tone="Accent"/>
+                            <TextBlock Text="{Binding Detail}" Style="{StaticResource Body}" FontSize="12.5" LineHeight="18" Margin="0,14,0,16" MinHeight="54"/>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                                <Border Style="{StaticResource KeyCap}"><TextBlock Text="CTRL" Style="{StaticResource Mono}" FontSize="11" FontWeight="Bold"/></Border>
+                                <TextBlock Text="+" Style="{StaticResource Label}" VerticalAlignment="Center" Margin="8,0"/>
+                                <Border Style="{StaticResource KeyCap}"><TextBlock Text="SHIFT" Style="{StaticResource Mono}" FontSize="11" FontWeight="Bold"/></Border>
+                                <TextBlock Text="+" Style="{StaticResource Label}" VerticalAlignment="Center" Margin="8,0"/>
+                                <Border Style="{StaticResource KeyCap}" BorderBrush="{StaticResource AccentBrush}"><TextBlock Text="F9" Style="{StaticResource Mono}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"/></Border>
+                                <TextBlock Text="COMEÇA / ENCERRA" Style="{StaticResource Label}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding IsIdle, Converter={StaticResource BoolVis}}">
+                                <Button Content="ARMAR MEDIÇÃO" Style="{StaticResource BtnPrimary}" Command="{Binding ArmCommand}" Margin="0,0,10,0"/>
+                                <Button Content="COMEÇAR EM 10 S" Style="{StaticResource Btn}" Command="{Binding DelayCommand}"/>
+                            </StackPanel>
+                            <Button Content="CANCELAR" Style="{StaticResource Btn}" Command="{Binding CancelCommand}" HorizontalAlignment="Left"
+                                    Visibility="{Binding IsActive, Converter={StaticResource BoolVis}}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ui:Plate>
+            </Grid>
+
+            <!-- ================= VAZIO ================= -->
+            <ui:Plate Grid.Row="2" Reveal="Focus" Delay="200" Visibility="{Binding NoRuns, Converter={StaticResource BoolVis}}" Margin="0,0,0,18">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="300"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="NENHUMA MEDIÇÃO AINDA" Style="{StaticResource H2}" FontSize="30"/>
+                        <TextBlock Text="O jeito honesto de saber se uma otimização funcionou é medir antes e depois." Style="{StaticResource Body}" Margin="0,8,24,0"/>
+                    </StackPanel>
+                    <UniformGrid Grid.Column="1" Columns="3">
+                        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" Padding="20,0">
+                            <StackPanel>
+                                <TextBlock Text="01" Style="{StaticResource Numeral}" FontSize="34" Foreground="{StaticResource AccentBrush}"/>
+                                <TextBlock Text="Escolha o jogo e a duração. 60 segundos é um bom padrão." Style="{StaticResource Body}" FontSize="12.5" LineHeight="18"/>
+                            </StackPanel>
+                        </Border>
+                        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" Padding="20,0">
+                            <StackPanel>
+                                <TextBlock Text="02" Style="{StaticResource Numeral}" FontSize="34" Foreground="{StaticResource AccentBrush}"/>
+                                <TextBlock Text="Arme e aperte CTRL + SHIFT + F9 dentro do jogo, sempre no mesmo trecho." Style="{StaticResource Body}" FontSize="12.5" LineHeight="18"/>
+                            </StackPanel>
+                        </Border>
+                        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" Padding="20,0">
+                            <StackPanel>
+                                <TextBlock Text="03" Style="{StaticResource Numeral}" FontSize="34" Foreground="{StaticResource AccentBrush}"/>
+                                <TextBlock Text="Otimize e meça de novo. O Hertzo compara as duas e diz se a diferença é real ou só variação." Style="{StaticResource Body}" FontSize="12.5" LineHeight="18"/>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+                </Grid>
+            </ui:Plate>
+
+            <!-- ================= RESULTADO ================= -->
+            <ui:Plate Grid.Row="2" Reveal="Shutter" Delay="200" Padding="0" Margin="0,0,0,18" DataContext="{Binding Current}"
+                      Visibility="{Binding DataContext.HasRuns, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolVis}}"
+                      Flash="{Binding Run.Id}">
+                <StackPanel>
+                    <Border Background="{StaticResource TextBrush}" Padding="24,12">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" FontFamily="{StaticResource FontMono}" FontSize="11.5" FontWeight="Bold" Foreground="{StaticResource AccentInkBrush}" VerticalAlignment="Center">
+                                <Run Text="{Binding Code, Mode=OneWay}"/><Run Text="  ·  "/><Run Text="{Binding WhenLabel, Mode=OneWay}"/>
+                            </TextBlock>
+                            <TextBlock Style="{StaticResource Numeral}" FontSize="24" Foreground="{StaticResource AccentInkBrush}">
+                                <Run Text="RESULTADO — "/><Run Text="{Binding Game, Mode=OneWay}"/>
+                            </TextBlock>
+                        </DockPanel>
+                    </Border>
+
+                    <Grid Margin="24,18,24,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,30,0">
+                            <TextBlock Text="{Binding Avg}" Style="{StaticResource Numeral}" FontSize="128" Foreground="{StaticResource AccentBrush}" Margin="-5,-22,0,-24"/>
+                            <TextBlock Text="FPS MÉDIO" Style="{StaticResource Label}" Foreground="{StaticResource TextBrush}"/>
+                        </StackPanel>
+                        <UniformGrid Grid.Column="1" Columns="4" VerticalAlignment="Center">
+                            <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" Padding="20,4">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Low1}" Style="{StaticResource StatNum}"/>
+                                    <TextBlock Text="1% LOW · FPS" Style="{StaticResource Label}"/>
+                                    <TextBlock Text="99% dos quadros foram mais rápidos" Style="{StaticResource Body}" FontSize="11" LineHeight="15" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+                            <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" Padding="20,4">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Low01}" Style="{StaticResource StatNum}"/>
+                                    <TextBlock Text="0,1% LOW · FPS" Style="{StaticResource Label}"/>
+                                    <TextBlock Text="as piores quedas da medição" Style="{StaticResource Body}" FontSize="11" LineHeight="15" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+                            <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" Padding="20,4">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding P99}" Style="{StaticResource StatNum}"/>
+                                    <TextBlock Text="P99 · MS" Style="{StaticResource Label}"/>
+                                    <TextBlock Text="tempo de quadro no pior 1%" Style="{StaticResource Body}" FontSize="11" LineHeight="15" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+                            <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0" Padding="20,4">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Stutter}" Style="{StaticResource StatNum}"/>
+                                    <TextBlock Text="ENGASGOS / MIN" Style="{StaticResource Label}"/>
+                                    <TextBlock Text="quadros 2,5× mais lentos que o normal" Style="{StaticResource Body}" FontSize="11" LineHeight="15" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
+                    </Grid>
+
+                    <TextBlock Text="{Binding Meta}" Style="{StaticResource Label}" Margin="24,8,24,0"/>
+
+                    <!-- gráfico -->
+                    <Border Margin="24,14,24,0" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="0,12,0,0">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,8">
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                    <Rectangle Width="16" Height="2" Fill="{StaticResource AccentBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="ESTA MEDIÇÃO" Style="{StaticResource Label}" Margin="6,0,16,0"/>
+                                    <StackPanel Orientation="Horizontal"
+                                                Visibility="{Binding DataContext.GraphCompareLabel, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource NullVis}}">
+                                        <Line X1="0" X2="16" Y1="0" Y2="0" Stroke="{StaticResource TextDimBrush}" StrokeThickness="1" StrokeDashArray="3 2" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding DataContext.GraphCompareLabel, RelativeSource={RelativeSource AncestorType=UserControl}}" Style="{StaticResource Label}" Margin="6,0,0,0"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock Text="TEMPO DE QUADRO · PIOR QUADRO DE CADA TRECHO" Style="{StaticResource Label}" Foreground="{StaticResource TextBrush}"/>
+                            </DockPanel>
+                            <ui:FrameTimeGraph Height="190" Series="{Binding Peaks}" RefreshMs="{Binding RefreshMs}"
+                                               Compare="{Binding DataContext.GraphCompare, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                            <TextBlock Text="Mais baixo e mais reto é melhor. Cada pico é uma travadinha que você sente na hora."
+                                       Style="{StaticResource Body}" FontSize="11.5" Margin="0,6,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- leitura -->
+                    <Border Margin="24,18,24,0" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="0,14,0,0">
+                        <StackPanel>
+                            <TextBlock Text="O QUE OS NÚMEROS DIZEM" Style="{StaticResource Label}" Foreground="{StaticResource TextBrush}" Margin="0,0,0,6"/>
+                            <ItemsControl ItemsSource="{Binding Notes}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><UniformGrid Columns="2"/></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <DockPanel Margin="0,8,24,8">
+                                            <Rectangle DockPanel.Dock="Left" Width="10" Height="10" VerticalAlignment="Top" Margin="0,4,12,0"
+                                                       Fill="{Binding Tone, Converter={StaticResource ToneBrush}}"/>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Title}" Style="{StaticResource H3}" FontSize="14"/>
+                                                <TextBlock Text="{Binding Detail}" Style="{StaticResource Body}" FontSize="12" LineHeight="17" Margin="0,3,0,0"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- contexto -->
+                    <Border Margin="0,14,0,0" Background="{StaticResource Bg2Brush}" Padding="24,14">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="ABRIR CSV" Style="{StaticResource BtnGhost}" VerticalAlignment="Top"
+                                    Visibility="{Binding HasCsv, Converter={StaticResource BoolVis}}"
+                                    Command="{Binding DataContext.OpenCsvCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                            <StackPanel>
+                                <TextBlock Text="{Binding TweaksLabel}" Style="{StaticResource Label}" Foreground="{StaticResource TextBrush}"/>
+                                <ItemsControl ItemsSource="{Binding Tweaks}" Margin="0,8,0,0">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate><ui:Pill Text="{Binding}" Tone="Neutral"/></DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock Text="{Binding Plan}" Style="{StaticResource Label}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+            </ui:Plate>
+
+            <!-- ================= ANTES × DEPOIS ================= -->
+            <ui:Plate Grid.Row="3" Reveal="Wipe" Delay="320" Padding="0" Margin="0,0,0,18" DataContext="{Binding Compare}"
+                      Visibility="{Binding DataContext.HasCompare, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolVis}}"
+                      Flash="{Binding Title}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="58"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Background="{StaticResource HatchAccentBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,1,0">
+                        <Border Background="{StaticResource Bg1Brush}" VerticalAlignment="Center" Padding="0,10">
+                            <TextBlock Text="ANTES × DEPOIS" Style="{StaticResource Numeral}" FontSize="19" HorizontalAlignment="Center">
+                                <TextBlock.LayoutTransform><RotateTransform Angle="-90"/></TextBlock.LayoutTransform>
+                            </TextBlock>
+                        </Border>
+                    </Border>
+
+                    <StackPanel Grid.Column="1" Margin="26,20,26,20">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="320"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Margin="0,0,28,0">
+                                <TextBlock Style="{StaticResource Label}">
+                                    <Run Text="MEDIÇÃO "/><Run Text="{Binding A.Code, Mode=OneWay}"/><Run Text=" → "/><Run Text="{Binding B.Code, Mode=OneWay}"/>
+                                </TextBlock>
+                                <TextBlock Text="{Binding Headline}" Style="{StaticResource Numeral}" FontSize="40" LineHeight="40" LineStackingStrategy="BlockLineHeight"
+                                           TextWrapping="Wrap" Margin="0,6,0,0" Foreground="{Binding HeadlineTone, Converter={StaticResource ToneBrush}}"/>
+                                <TextBlock Text="{Binding Sub}" Style="{StaticResource Body}" FontSize="12.5" LineHeight="18" Margin="0,8,0,0"/>
+                                <ui:Pill Text="ATENÇÃO: SÃO JOGOS DIFERENTES" Tone="Warn" HorizontalAlignment="Left" Margin="0,10,0,0"
+                                         Visibility="{Binding DifferentGame, Converter={StaticResource BoolVis}}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1">
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="86"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="MÉTRICA" Style="{StaticResource Label}"/>
+                                    <TextBlock Grid.Column="1" Style="{StaticResource Label}"><Run Text="A "/><Run Text="{Binding A.Code, Mode=OneWay}"/></TextBlock>
+                                    <TextBlock Grid.Column="2" Style="{StaticResource Label}"><Run Text="B "/><Run Text="{Binding B.Code, Mode=OneWay}"/></TextBlock>
+                                    <TextBlock Grid.Column="3" Text="Δ" Style="{StaticResource Label}"/>
+                                    <TextBlock Grid.Column="4" Text="LEITURA" Style="{StaticResource Label}"/>
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding Rows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="0,8,0,6">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="90"/>
+                                                        <ColumnDefinition Width="90"/>
+                                                        <ColumnDefinition Width="80"/>
+                                                        <ColumnDefinition Width="86"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding Label}" Style="{StaticResource H3}" FontSize="13" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding A}" Style="{StaticResource Mono}" FontSize="12.5" Foreground="{StaticResource TextDimBrush}" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding B}" Style="{StaticResource Mono}" FontSize="12.5" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="3" Text="{Binding Delta}" Style="{StaticResource Mono}" FontSize="12.5" FontWeight="Bold" VerticalAlignment="Center"
+                                                               Foreground="{Binding Tone, Converter={StaticResource ToneBrush}}"/>
+                                                    <ui:Pill Grid.Column="4" Text="{Binding Verdict}" Tone="{Binding Tone}" HorizontalAlignment="Left" Margin="0"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Grid>
+
+                        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Margin="0,16,0,0" Padding="0,14,0,0">
+                            <StackPanel>
+                                <TextBlock Text="O QUE MUDOU ENTRE AS DUAS" Style="{StaticResource Label}" Foreground="{StaticResource TextBrush}" Margin="0,0,0,8"/>
+                                <ItemsControl ItemsSource="{Binding Added}">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate><ui:Pill Text="{Binding StringFormat=+ {0}}" Tone="Ok"/></DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <ItemsControl ItemsSource="{Binding Removed}">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate><ui:Pill Text="{Binding StringFormat=− {0}}" Tone="Bad"/></DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock Style="{StaticResource Body}" FontSize="12.5" LineHeight="18"
+                                           Visibility="{Binding NoTweakChange, Converter={StaticResource BoolVis}}"
+                                           Text="Nenhum ajuste do Hertzo mudou entre as duas medições. Se houve diferença, ela veio de outra coisa: cena, driver, temperatura, programas abertos ou configuração do jogo."/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </ui:Plate>
+
+            <!-- ================= HISTÓRICO ================= -->
+            <ui:Plate Grid.Row="4" Reveal="Rise" Delay="400" Padding="0"
+                      Visibility="{Binding HasRuns, Converter={StaticResource BoolVis}}">
+                <StackPanel>
+                    <DockPanel Margin="24,16,24,10">
+                        <TextBlock DockPanel.Dock="Right" Text="MARQUE A E B PARA COMPARAR" Style="{StaticResource Label}" VerticalAlignment="Center"/>
+                        <TextBlock Text="HISTÓRICO" Style="{StaticResource Numeral}" FontSize="22"/>
+                    </DockPanel>
+                    <Grid Margin="24,0,24,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="60"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="110"/>
+                            <ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Nº" Style="{StaticResource Label}"/>
+                        <TextBlock Grid.Column="1" Text="JOGO" Style="{StaticResource Label}"/>
+                        <TextBlock Grid.Column="2" Text="QUANDO" Style="{StaticResource Label}"/>
+                        <TextBlock Grid.Column="3" Text="FPS MÉDIO" Style="{StaticResource Label}"/>
+                        <TextBlock Grid.Column="4" Text="1% LOW" Style="{StaticResource Label}"/>
+                        <TextBlock Grid.Column="5" Text="ENGASGOS/MIN" Style="{StaticResource Label}"/>
+                        <TextBlock Grid.Column="6" Text="COMPARAR" Style="{StaticResource Label}"/>
+                    </Grid>
+                    <ItemsControl ItemsSource="{Binding Runs}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border x:Name="RowBd" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Background="Transparent">
+                                    <Grid>
+                                        <Rectangle x:Name="Bar" Width="4" HorizontalAlignment="Left" Fill="{StaticResource AccentBrush}" Visibility="Collapsed"/>
+                                        <Grid Margin="24,9,24,9">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="60"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="110"/>
+                                                <ColumnDefinition Width="90"/>
+                                                <ColumnDefinition Width="80"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="80"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Code}" Style="{StaticResource Numeral}" FontSize="18" Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Game}" Style="{StaticResource H3}" FontSize="13.5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding WhenLabel}" Style="{StaticResource Mono}" FontSize="11.5" Foreground="{StaticResource TextDimBrush}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding Avg}" Style="{StaticResource Numeral}" FontSize="20" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="4" Text="{Binding Low1}" Style="{StaticResource Numeral}" FontSize="20" Foreground="{StaticResource TextDimBrush}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="5" Text="{Binding Stutter}" Style="{StaticResource Mono}" FontSize="12" VerticalAlignment="Center"/>
+                                            <StackPanel Grid.Column="6" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button Content="A" Style="{StaticResource MarkBtn}" Tag="{Binding IsA}" ToolTip="Usar como ANTES"
+                                                        Command="{Binding DataContext.SetACommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                                <Button Content="B" Style="{StaticResource MarkBtn}" Tag="{Binding IsB}" ToolTip="Usar como DEPOIS"
+                                                        Command="{Binding DataContext.SetBCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="7" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button Content="VER" Style="{StaticResource BtnGhost}" Margin="0,0,8,0"
+                                                        Command="{Binding DataContext.ShowCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                                <Button Content="APAGAR" Style="{StaticResource BtnGhost}"
+                                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                                <DataTemplate.Triggers>
+                                    <Trigger SourceName="RowBd" Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="RowBd" Property="Background" Value="{StaticResource Bg2Brush}"/>
+                                    </Trigger>
+                                    <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                                        <Setter TargetName="Bar" Property="Visibility" Value="Visible"/>
+                                        <Setter TargetName="RowBd" Property="Background" Value="{StaticResource Bg2Brush}"/>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ui:Plate>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

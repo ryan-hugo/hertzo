@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>Hertzo</AssemblyName>
+    <RootNamespace>Hertzo</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\hertzo.ico</ApplicationIcon>
+    <Version>1.0.0</Version>
+    <Product>Hertzo — Otimizador para jogos</Product>
+    <Description>Otimizador seguro e transparente do Windows para jogos.</Description>
+    <Company>Hertzo</Company>
+    <Authors>Colaboradores do Hertzo</Authors>
+    <Copyright>Copyright (c) 2026 Colaboradores do Hertzo — licença MIT</Copyright>
+    <RepositoryUrl>https://github.com/ryan-hugo/hertzo</RepositoryUrl>
+    <SatelliteResourceLanguages>pt-BR</SatelliteResourceLanguages>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Management" Version="10.0.0" />
+    <PackageReference Include="Vortice.Direct3D11" Version="3.8.3" />
+    <PackageReference Include="Vortice.DXGI" Version="3.8.3" />
+    <PackageReference Include="Vortice.MediaFoundation" Version="3.8.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\hertzo.ico" />
+    <!-- PresentMon 2.6.0 (Intel, licença MIT) — usado pela Medição de FPS -->
+    <EmbeddedResource Include="Assets\Tools\PresentMon.exe" LogicalName="Hertzo.PresentMon.exe" />
+    <EmbeddedResource Include="Assets\Tools\PresentMon-LICENSE.txt" LogicalName="Hertzo.PresentMon-LICENSE.txt" />
+  </ItemGroup>
+
+</Project>

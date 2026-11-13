@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hertzo — otimizador para jogos que mostra a prova</title>
+<meta name="description" content="Otimizador para jogos no Windows, open source: ajustes reversíveis com nível de evidência, medição de FPS com PresentMon e replay de clipes com encoder de hardware. Sem telemetria.">
+<meta property="og:title" content="Hertzo — otimizador para jogos que mostra a prova">
+<meta property="og:description" content="Ajustes reversíveis com nível de evidência, medição de FPS e replay de clipes. Open source, sem telemetria.">
+<meta property="og:image" content="https://ryan-hugo.github.io/hertzo/assets/banner.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0D0C0A">
+<link rel="icon" type="image/png" href="assets/icon-256.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0D0C0A;
+    --plate: #161411;
+    --plate-2: #1C1915;
+    --line: #2E2A25;
+    --bone: #EDE6D6;
+    --mute: #8C8476;
+    --signal: #FF5B1F;
+    --ok: #9BC27A;
+    --warn: #F0C24B;
+    --display: "Barlow Condensed", "Bahnschrift", "Arial Narrow", sans-serif;
+    --body: "Barlow", "Bahnschrift", system-ui, sans-serif;
+    --mono: "JetBrains Mono", "Cascadia Mono", ui-monospace, monospace;
+    --gutter: clamp(16px, 4vw, 56px);
+    --max: 1240px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--ink); color: var(--bone);
+    font: 400 17px/1.6 var(--body);
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before { /* grão */
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 100; opacity: .07;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  a { color: inherit; }
+  img { max-width: 100%; display: block; }
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
+  .mono { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); }
+  .mono b { color: var(--bone); font-weight: 700; }
+
+  /* ---------- topo ---------- */
+  header.top {
+    position: sticky; top: 0; z-index: 50; background: rgba(13,12,10,.86); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  header.top .wrap { display: flex; align-items: center; gap: 24px; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .brand img { width: 34px; height: 34px; }
+  .brand span { font: 700 26px/1 var(--display); letter-spacing: .02em; }
+  nav.links { display: flex; gap: 22px; margin-left: auto; }
+  nav.links a { text-decoration: none; font: 500 12px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--mute); }
+  nav.links a:hover { color: var(--bone); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px; text-decoration: none; cursor: pointer;
+    font: 700 15px/1 var(--display); letter-spacing: .06em; text-transform: uppercase;
+    padding: 14px 20px; border: 1px solid var(--bone); color: var(--bone); background: transparent;
+    transition: transform .15s ease, box-shadow .15s ease, background .15s;
+  }
+  .btn:hover { transform: translate(-3px, -3px); box-shadow: 3px 3px 0 var(--signal); }
+  .btn.primary { background: var(--signal); border-color: var(--signal); color: var(--ink); }
+  .btn.primary:hover { box-shadow: 3px 3px 0 var(--bone); }
+  .btn svg { width: 16px; height: 16px; }
+  header.top .btn { padding: 10px 14px; font-size: 13px; }
+
+  /* ---------- hero ---------- */
+  .hero { position: relative; padding: clamp(48px, 9vw, 110px) 0 40px; overflow: hidden; }
+  .hero .grid-bg {
+    position: absolute; inset: 0; pointer-events: none; opacity: .5;
+    background-image: linear-gradient(var(--plate-2) 1px, transparent 1px), linear-gradient(90deg, var(--plate-2) 1px, transparent 1px);
+    background-size: 64px 64px; mask-image: linear-gradient(to bottom, #000 40%, transparent);
+  }
+  .hero .meta { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; position: relative; }
+  .ruler { height: 18px; margin: 14px 0 0; position: relative;
+    background: repeating-linear-gradient(90deg, var(--line) 0 2px, transparent 2px 10px);
+    mask-image: linear-gradient(to bottom, #000 45%, transparent 45%);
+  }
+  .ruler::after { content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(90deg, var(--line) 0 2px, transparent 2px 100px); }
+  .hero h1 {
+    position: relative; margin: 26px 0 0; font: 800 clamp(88px, 19vw, 248px)/.82 var(--display);
+    letter-spacing: -.01em; text-transform: uppercase;
+  }
+  .hero h1 .ghost { -webkit-text-stroke: 1.5px var(--line); color: transparent; position: absolute; left: .06em; top: .06em; z-index: -1; }
+  .hero .lead { position: relative; display: grid; grid-template-columns: 1.1fr .9fr; gap: 40px; margin-top: 34px; align-items: end; }
+  .hero .lead p.big { font: 500 clamp(24px, 3vw, 34px)/1.2 var(--body); margin: 0; }
+  .hero .lead p.big em { font-style: normal; color: var(--signal); }
+  .hero .lead p.small { margin: 0 0 22px; color: var(--mute); }
+  .hero .cta { display: flex; gap: 14px; flex-wrap: wrap; }
+  .pulse { position: relative; margin-top: 54px; height: 140px; }
+  .pulse svg { width: 100%; height: 100%; overflow: visible; }
+  .pulse path { fill: none; stroke: var(--signal); stroke-width: 5; stroke-linejoin: miter; stroke-miterlimit: 12;
+    stroke-dasharray: 2400; stroke-dashoffset: 2400; animation: draw 2.2s cubic-bezier(.6,.05,.2,1) .2s forwards; }
+  .pulse rect { fill: var(--bone); opacity: 0; animation: pop .3s ease 2.2s forwards, blink 1.2s steps(2) 2.6s infinite; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes pop { to { opacity: 1; } }
+  @keyframes blink { 50% { opacity: .25; } }
+
+  /* ---------- faixa de números ---------- */
+  .stats { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .stats .wrap { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .stat { padding: 28px 22px; border-left: 1px solid var(--line); }
+  .stat:first-child { border-left: 0; padding-left: 0; }
+  .stat .n { font: 800 64px/.9 var(--display); }
+  .stat .n.sig { color: var(--signal); }
+  .stat .n.ok { color: var(--ok); }
+
+  /* ---------- seções ---------- */
+  section.block { padding: clamp(64px, 10vw, 120px) 0 0; }
+  .sec-head { display: grid; grid-template-columns: 220px 1fr; gap: 32px; margin-bottom: 44px; align-items: end; }
+  .sec-head .num { font: 800 120px/.8 var(--display); -webkit-text-stroke: 1.5px var(--signal); color: transparent; }
+  .sec-head h2 { margin: 0 0 6px; font: 800 clamp(40px, 6vw, 72px)/.95 var(--display); text-transform: uppercase; }
+  .sec-head p { margin: 0; color: var(--mute); max-width: 680px; }
+
+  /* placa com marcas de corte */
+  .plate { position: relative; background: var(--plate); border: 1px solid var(--line); padding: 28px; transition: transform .2s ease, box-shadow .2s ease; }
+  .plate::before, .plate::after { content: ""; position: absolute; width: 14px; height: 14px; border: 0 solid var(--mute); transition: all .2s ease; }
+  .plate::before { top: -8px; left: -8px; border-top-width: 1.5px; border-left-width: 1.5px; }
+  .plate::after { bottom: -8px; right: -8px; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+  .plate:hover { transform: translate(-4px, -4px);
+    box-shadow: 6px 6px 0 0 var(--ink), 6px 6px 0 1px var(--line), 10px 10px 0 0 rgba(255,91,31,.22); }
+  .plate:hover::before { top: -12px; left: -12px; border-color: var(--signal); }
+  .plate:hover::after { bottom: -12px; right: -12px; border-color: var(--signal); }
+
+  /* pilares */
+  .pillars { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+  .pillar { display: flex; flex-direction: column; min-height: 340px; }
+  .pillar .tag { display: flex; align-items: center; gap: 10px; }
+  .pillar .tag i { width: 24px; height: 24px; background: var(--signal); color: var(--ink); font: 700 13px/24px var(--mono); text-align: center; font-style: normal; }
+  .pillar h3 { font: 800 34px/1 var(--display); text-transform: uppercase; margin: 22px 0 10px; }
+  .pillar ul { list-style: none; padding: 0; margin: 0; color: #CFC7B6; font-size: 15px; }
+  .pillar li { padding: 7px 0; border-top: 1px dashed var(--line); }
+  .pillar .bar { margin-top: auto; height: 3px; background: var(--signal); transform-origin: left; transform: scaleX(.18); transition: transform .35s ease; }
+  .pillar:hover .bar { transform: scaleX(1); }
+
+  /* prova */
+  .proof { display: grid; grid-template-columns: 1.35fr 1fr; gap: 28px; align-items: start; }
+  .shot { border: 1px solid var(--line); background: var(--plate); padding: 10px; }
+  .shot img { width: 100%; height: auto; }
+  .readout { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); margin-bottom: 24px; }
+  .readout div { background: var(--plate); padding: 18px 20px; }
+  .readout .v { font: 800 54px/.9 var(--display); }
+  .readout .v.sig { color: var(--signal); }
+  .noise { display: inline-block; font: 700 11px var(--mono); letter-spacing: .1em; padding: 3px 8px; border: 1px solid var(--warn); color: var(--warn); margin-right: 6px; }
+  .real { display: inline-block; font: 700 11px var(--mono); letter-spacing: .1em; padding: 3px 8px; border: 1px solid var(--ok); color: var(--ok); margin-right: 6px; }
+
+  /* comparação */
+  table.cmp { width: 100%; border-collapse: collapse; font-size: 16px; }
+  table.cmp th { text-align: left; font: 700 12px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--mute); padding: 0 18px 14px; }
+  table.cmp td { padding: 18px; border-top: 1px solid var(--line); vertical-align: top; }
+  table.cmp td:first-child { color: var(--mute); text-decoration: line-through; text-decoration-color: rgba(140,132,118,.5); width: 44%; }
+  table.cmp td:last-child { border-left: 3px solid var(--signal); background: var(--plate); }
+
+  /* galeria */
+  .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .gallery figure { margin: 0; }
+  .gallery figure .shot { padding: 6px; }
+  .gallery figure button { all: unset; cursor: zoom-in; display: block; }
+  .gallery figcaption { margin-top: 10px; }
+  .gallery .wide { grid-column: span 2; }
+  dialog#zoom { padding: 0; border: 1px solid var(--line); background: var(--ink); max-width: min(1440px, 96vw); }
+  dialog#zoom::backdrop { background: rgba(13,12,10,.9); }
+  dialog#zoom img { width: 100%; }
+  dialog#zoom form { position: absolute; top: 10px; right: 10px; }
+
+  /* segurança */
+  .never { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0; border-top: 1px solid var(--line); }
+  .never > div { padding: 20px 0; border-bottom: 1px solid var(--line); display: flex; gap: 16px; align-items: baseline; }
+  .never > div:nth-child(odd) { padding-right: 28px; }
+  .never > div:nth-child(even) { padding-left: 28px; border-left: 1px solid var(--line); }
+  .never b { font: 700 22px/1.15 var(--display); text-transform: uppercase; display: block; }
+  .never span.x { font: 700 14px var(--mono); color: var(--signal); }
+  .never p { margin: 4px 0 0; color: var(--mute); font-size: 15px; }
+  .guard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
+  .guard h4 { margin: 0 0 8px; font: 800 22px/1.1 var(--display); text-transform: uppercase; }
+  .guard p { margin: 0; color: #CFC7B6; font-size: 15px; }
+
+  /* faq */
+  .faq details { border-top: 1px solid var(--line); padding: 20px 0; }
+  .faq details:last-child { border-bottom: 1px solid var(--line); }
+  .faq summary { cursor: pointer; list-style: none; font: 700 26px/1.15 var(--display); text-transform: uppercase; display: flex; justify-content: space-between; gap: 20px; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "+"; font-family: var(--mono); color: var(--signal); }
+  .faq details[open] summary::after { content: "−"; }
+  .faq details p { color: #CFC7B6; margin: 12px 0 0; max-width: 820px; }
+
+  /* download */
+  .download { margin-top: clamp(64px, 10vw, 120px); background: var(--signal); color: var(--ink); }
+  .download .wrap { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; padding-top: 56px; padding-bottom: 56px; align-items: center; }
+  .download h2 { margin: 0; font: 800 clamp(48px, 8vw, 104px)/.85 var(--display); text-transform: uppercase; }
+  .download p { margin: 14px 0 0; font-weight: 500; }
+  .download .btn { border-color: var(--ink); color: var(--ink); }
+  .download .btn.primary { background: var(--ink); color: var(--bone); }
+  .download .btn.primary:hover { box-shadow: 3px 3px 0 var(--bone); }
+  .download .btn:hover { box-shadow: 3px 3px 0 var(--ink); }
+  .download .req { font: 600 12px var(--mono); letter-spacing: .06em; text-transform: uppercase; margin-top: 18px; opacity: .8; }
+  code { font-family: var(--mono); font-size: .85em; background: var(--plate-2); padding: 2px 6px; border: 1px solid var(--line); }
+  .download code { background: rgba(13,12,10,.12); border-color: rgba(13,12,10,.25); }
+
+  footer { padding: 36px 0 48px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  footer p { margin: 0; color: var(--mute); font-size: 14px; max-width: 640px; }
+
+  /* entrada ao rolar */
+  .rise { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s cubic-bezier(.2,.7,.2,1); }
+  .rise.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .rise { opacity: 1; transform: none; transition: none; }
+    .pulse path { animation: none; stroke-dashoffset: 0; }
+    .pulse rect { animation: none; opacity: 1; }
+  }
+
+  /* ---------- responsivo ---------- */
+  @media (max-width: 1080px) {
+    .pillars { grid-template-columns: repeat(2, 1fr); }
+    .pillars .pillar:last-child { grid-column: span 2; }
+    .proof, .download .wrap, .hero .lead { grid-template-columns: 1fr; }
+    .guard { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 760px) {
+    nav.links { display: none; }
+    header.top .btn { margin-left: auto; }
+    .stats .wrap { grid-template-columns: repeat(2, 1fr); }
+    .stat { padding: 22px 0 22px 18px; }
+    .stat:nth-child(3) { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); }
+    .stat:nth-child(4) { border-top: 1px solid var(--line); }
+    .stat .n { font-size: 48px; }
+    .sec-head { grid-template-columns: 1fr; gap: 0; }
+    .sec-head .num { font-size: 80px; margin-bottom: 8px; }
+    .pillars { grid-template-columns: 1fr; }
+    .pillars .pillar:last-child { grid-column: auto; }
+    .pillar { min-height: 0; }
+    .gallery { grid-template-columns: 1fr; }
+    .gallery .wide { grid-column: auto; }
+    .never { grid-template-columns: 1fr; }
+    .never > div:nth-child(odd) { padding-right: 0; }
+    .never > div:nth-child(even) { padding-left: 0; border-left: 0; }
+    table.cmp td:first-child { width: auto; }
+    table.cmp, table.cmp tbody, table.cmp tr, table.cmp td { display: block; }
+    table.cmp thead { display: none; }
+    table.cmp td:first-child { border-top: 1px solid var(--line); padding-bottom: 6px; }
+    table.cmp td:last-child { border-top: 0; }
+    .readout .v { font-size: 42px; }
+    .pulse { height: 90px; margin-top: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="assets/icon-256.png" alt=""><span>HERTZO</span></a>
+    <nav class="links">
+      <a href="#pilares">Recursos</a>
+      <a href="#prova">Medição</a>
+      <a href="#telas">Telas</a>
+      <a href="#seguranca">Segurança</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://github.com/ryan-hugo/hertzo">GitHub</a>
+    </nav>
+    <a class="btn primary" href="https://github.com/ryan-hugo/hertzo/releases/latest">Baixar</a>
+  </div>
+</header>
+
+<main>
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="grid-bg"></div>
+    <div class="wrap">
+      <div class="meta">
+        <span class="mono">HZ-01 / <b>ficha de telemetria</b></span>
+        <span class="mono">Windows 10 · 11 &nbsp;/&nbsp; open source · MIT &nbsp;/&nbsp; <b>v1.0.0</b></span>
+      </div>
+      <div class="ruler"></div>
+      <h1><span class="ghost" aria-hidden="true">Hertzo</span>Hertzo</h1>
+      <div class="lead">
+        <p class="big">O otimizador para jogos que <em>não promete FPS</em>. Ele mostra a prova.</p>
+        <div>
+          <p class="small">Ajustes reversíveis com nível de evidência, medição de FPS com o PresentMon da Intel e replay de clipes no encoder da placa. Sem telemetria, sem conta, sem internet.</p>
+          <div class="cta">
+            <a class="btn primary" href="https://github.com/ryan-hugo/hertzo/releases/latest">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 1v10M3.5 6.5 8 11l4.5-4.5M2 14.5h12"/></svg>
+              Baixar Hertzo.exe
+            </a>
+            <a class="btn" href="https://github.com/ryan-hugo/hertzo">
+              <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+              Código-fonte
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="pulse" aria-hidden="true">
+        <svg viewBox="0 0 1200 140" preserveAspectRatio="none">
+          <path d="M0 80 H720 L746 56 L766 80 L796 14 L830 132 L854 80 H1150"/>
+          <rect x="1162" y="68" width="24" height="24"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= NÚMEROS ================= -->
+  <div class="stats">
+    <div class="wrap">
+      <div class="stat"><div class="n">25</div><div class="mono">ajustes, cada um com <b>evidência</b></div></div>
+      <div class="stat"><div class="n sig">100%</div><div class="mono">reversível, <b>valor por valor</b></div></div>
+      <div class="stat"><div class="n">0</div><div class="mono">injeção em jogos · <b>anti-cheat ok</b></div></div>
+      <div class="stat"><div class="n ok">0</div><div class="mono">telemetria · <b>open source MIT</b></div></div>
+    </div>
+  </div>
+
+  <!-- ================= PILARES ================= -->
+  <section class="block" id="pilares">
+    <div class="wrap">
+      <div class="sec-head rise">
+        <div class="num">01</div>
+        <div>
+          <h2>Cinco pilares</h2>
+          <p>O Hertzo não é uma lista de tweaks. Ele deixa o PC pronto, prova o resultado, grava suas jogadas, mantém tudo limpo e protege cada alteração.</p>
+        </div>
+      </div>
+      <div class="pillars">
+        <article class="plate pillar rise">
+          <div class="tag"><i>A</i><span class="mono">PC pronto para jogar</span></div>
+          <h3>Otimizar</h3>
+          <ul>
+            <li>Check-up com peso real: monitor a 60 Hz, RAM sem XMP, canal único</li>
+            <li>25 ajustes com impacto, risco e evidência</li>
+            <li>Perfis por jogo: GPU dedicada, tela cheia, prioridade</li>
+          </ul>
+          <div class="bar"></div>
+        </article>
+        <article class="plate pillar rise">
+          <div class="tag"><i>B</i><span class="mono">Prova com números</span></div>
+          <h3>Medir</h3>
+          <ul>
+            <li>FPS médio, 1% low, 0,1% low, P99 e engasgos</li>
+            <li>Antes × depois que separa ganho real de ruído</li>
+            <li>Ctrl + Shift + F9 dentro do jogo</li>
+          </ul>
+          <div class="bar"></div>
+        </article>
+        <article class="plate pillar rise">
+          <div class="tag"><i>C</i><span class="mono">Suas jogadas</span></div>
+          <h3>Capturar</h3>
+          <ul>
+            <li>Replay de 5 s a 10 min guardado na RAM</li>
+            <li>H.264 por hardware: AMF, NVENC, QuickSync</li>
+            <li>Jogo + microfone, aviso na tela do jogo</li>
+          </ul>
+          <div class="bar"></div>
+        </article>
+        <article class="plate pillar rise">
+          <div class="tag"><i>D</i><span class="mono">Limpeza e boot</span></div>
+          <h3>Manter</h3>
+          <ul>
+            <li>Temporários, caches de shader, despejos de memória</li>
+            <li>Memória em espera e cache DNS sob demanda</li>
+            <li>Programas da inicialização</li>
+          </ul>
+          <div class="bar"></div>
+        </article>
+        <article class="plate pillar rise">
+          <div class="tag"><i>E</i><span class="mono">Backup e honestidade</span></div>
+          <h3>Proteger</h3>
+          <ul>
+            <li>Backup de cada valor original + ponto de restauração</li>
+            <li>Desfazer tudo em um clique</li>
+            <li>Tela Transparência: mitos e fontes</li>
+          </ul>
+          <div class="bar"></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PROVA ================= -->
+  <section class="block" id="prova">
+    <div class="wrap">
+      <div class="sec-head rise">
+        <div class="num">02</div>
+        <div>
+          <h2>Medido, não prometido</h2>
+          <p>Duas medições iguais já variam alguns por cento sozinhas. O Hertzo sabe disso e marca como ruído o que não passa da variação normal.</p>
+        </div>
+      </div>
+      <div class="proof">
+        <div class="shot rise"><img src="screenshots/05-medicao.png" alt="Tela Medição do Hertzo com resultado do VALORANT: 464 FPS médio, 1% low 220" width="1440" height="960" loading="lazy"></div>
+        <div class="rise">
+          <div class="readout">
+            <div><div class="v sig">464</div><div class="mono">FPS médio</div></div>
+            <div><div class="v">220</div><div class="mono">1% low</div></div>
+            <div><div class="v">163</div><div class="mono">0,1% low</div></div>
+            <div><div class="v">4,6</div><div class="mono">P99 · ms</div></div>
+          </div>
+          <p class="mono" style="margin:0 0 10px">VALORANT · Ryzen 7 5700X · RX 580 · 120 s</p>
+          <p>Usa o <b>PresentMon</b> da Intel, que só lê os eventos de quadros que o Windows publica. Nada é injetado no jogo, então funciona com Vanguard, VAC, EAC e BattlEye.</p>
+          <p><span class="real">REAL</span> diferença acima da variação normal &nbsp; <span class="noise">RUÍDO</span> ±3% no médio · ±6% no 1% low · ±10% no 0,1% low</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= COMPARAÇÃO ================= -->
+  <section class="block">
+    <div class="wrap">
+      <div class="sec-head rise">
+        <div class="num">03</div>
+        <div>
+          <h2>O contrário do de sempre</h2>
+          <p>Se um otimizador não mostra o que muda e não deixa desfazer, ele está pedindo confiança cega.</p>
+        </div>
+      </div>
+      <table class="cmp rise">
+        <thead><tr><th>Otimizadores comuns</th><th>Hertzo</th></tr></thead>
+        <tbody>
+          <tr><td>“+50% de FPS” sem medir nada</td><td>Mede antes e depois e diz se a diferença é real</td></tr>
+          <tr><td>Dezenas de tweaks copiados de fórum</td><td>Cada ajuste com fonte e rótulo de evidência; os fracos nunca entram no “Otimizar agora”</td></tr>
+          <tr><td>Desligam Defender, Firewall e Windows Update</td><td>Nunca mexe em proteção, anti-cheat, <code>bcdedit</code> ou mitigações de CPU</td></tr>
+          <tr><td>Difícil ou impossível de desfazer</td><td>Backup de cada valor original e “Desfazer tudo”, mesmo depois de reiniciar</td></tr>
+          <tr><td>Telemetria, anúncios, assinatura</td><td>Open source (MIT), sem conta, sem internet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= TELAS ================= -->
+  <section class="block" id="telas">
+    <div class="wrap">
+      <div class="sec-head rise">
+        <div class="num">04</div>
+        <div>
+          <h2>Uma ficha de telemetria</h2>
+          <p>Preto quente, osso e um único laranja de sinal. Tipografia de instrumento, marcas de corte e nada de neon. Clique para ampliar.</p>
+        </div>
+      </div>
+      <div class="gallery">
+        <figure class="wide rise"><button data-src="screenshots/01-painel.png"><div class="shot"><img src="screenshots/01-painel.png" alt="Painel" width="1440" height="960" loading="lazy"></div></button><figcaption class="mono"><b>Painel</b> · nota de prontidão e os cinco pilares</figcaption></figure>
+        <figure class="rise"><button data-src="screenshots/aviso-no-jogo.png"><div class="shot" style="display:grid;place-items:center;aspect-ratio:1440/960;background:linear-gradient(135deg,#2a3340,#1b1f24)"><img src="screenshots/aviso-no-jogo.png" alt="Aviso de clipe salvo por cima do jogo" loading="lazy" style="width:70%"></div></button><figcaption class="mono"><b>Aviso no jogo</b> · sem roubar foco</figcaption></figure>
+        <figure class="rise"><button data-src="screenshots/03-otimizacoes.png"><div class="shot"><img src="screenshots/03-otimizacoes.png" alt="Otimizações" width="1440" height="960" loading="lazy"></div></button><figcaption class="mono"><b>Otimizações</b> · impacto, risco, evidência</figcaption></figure>
+        <figure class="rise"><button data-src="screenshots/06-clipes.png"><div class="shot"><img src="screenshots/06-clipes.png" alt="Clipes" width="1440" height="800" loading="lazy"></div></button><figcaption class="mono"><b>Clipes</b> · replay e gravação</figcaption></figure>
+        <figure class="rise"><button data-src="screenshots/02-checkup.png"><div class="shot"><img src="screenshots/02-checkup.png" alt="Check-up" width="1440" height="960" loading="lazy"></div></button><figcaption class="mono"><b>Check-up</b> · o que mais pesa primeiro</figcaption></figure>
+        <figure class="rise"><button data-src="screenshots/04-jogos.png"><div class="shot"><img src="screenshots/04-jogos.png" alt="Jogos" width="1440" height="960" loading="lazy"></div></button><figcaption class="mono"><b>Jogos</b> · perfis por executável</figcaption></figure>
+        <figure class="rise"><button data-src="screenshots/09-backup.png"><div class="shot"><img src="screenshots/09-backup.png" alt="Backup" width="1440" height="960" loading="lazy"></div></button><figcaption class="mono"><b>Backup</b> · desfazer tudo</figcaption></figure>
+        <figure class="rise"><button data-src="screenshots/10-transparencia.png"><div class="shot"><img src="screenshots/10-transparencia.png" alt="Transparência" width="1440" height="960" loading="lazy"></div></button><figcaption class="mono"><b>Transparência</b> · mitos e fontes</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SEGURANÇA ================= -->
+  <section class="block" id="seguranca">
+    <div class="wrap">
+      <div class="sec-head rise">
+        <div class="num">05</div>
+        <div>
+          <h2>O que ele nunca faz</h2>
+          <p>Rodar como administrador é responsabilidade. Estas linhas o Hertzo não cruza, e o código está aberto para você conferir.</p>
+        </div>
+      </div>
+      <div class="never rise">
+        <div><span class="x">✕</span><div><b>Antivírus, Firewall, Windows Update</b><p>Quase não pesam em jogo e são sua principal proteção.</p></div></div>
+        <div><span class="x">✕</span><div><b>Anti-cheat e arquivos de jogos</b><p>Nada é injetado. Só configurações oficiais do Windows.</p></div></div>
+        <div><span class="x">✕</span><div><b>bcdedit e timers de boot</b><p>Costuma piorar a latência em CPUs modernas.</p></div></div>
+        <div><span class="x">✕</span><div><b>Mitigações de Spectre/Meltdown</b><p>Ganho mínimo em jogos, brecha de segurança real.</p></div></div>
+        <div><span class="x">✕</span><div><b>Remover apps do sistema</b><p>Quebra Game Pass, atualizações e alguns jogos.</p></div></div>
+        <div><span class="x">✕</span><div><b>Internet e telemetria</b><p>O Hertzo não se conecta a nada. Links só abrem quando você clica.</p></div></div>
+      </div>
+      <div class="guard">
+        <div class="plate rise"><span class="mono">S-01</span><h4>Pasta só de admins</h4><p><code>%ProgramData%\Hertzo</code> não aceita escrita de programas sem admin. Nada plantado lá é usado.</p></div>
+        <div class="plate rise"><span class="mono">S-02</span><h4>Diário validado</h4><p>O backup só restaura valores que aquele ajuste realmente altera. Um diário adulterado não escreve em outro lugar.</p></div>
+        <div class="plate rise"><span class="mono">S-03</span><h4>Limpeza à prova de junção</h4><p>O caminho real de cada arquivo é conferido no momento de apagar. Nada fora da pasta alvo é apagado.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FAQ ================= -->
+  <section class="block faq" id="faq">
+    <div class="wrap">
+      <div class="sec-head rise">
+        <div class="num">06</div>
+        <div><h2>Perguntas</h2></div>
+      </div>
+      <div class="rise">
+        <details><summary>Posso ser banido?</summary><p>O Hertzo não injeta nada nem lê a memória dos jogos: só usa configurações oficiais do Windows. A medição lê eventos que o próprio Windows publica e os clipes usam a mesma API de captura do OBS. Funciona com Vanguard, VAC, EAC e BattlEye. Ainda assim, nenhum programa de terceiros pode garantir isso por um anti-cheat.</p></details>
+        <details><summary>Quanto FPS eu vou ganhar?</summary><p>Depende do PC, e por isso o Hertzo mede em vez de prometer. Os ganhos grandes vêm de problemas reais que o Check-up encontra: monitor a 60 Hz em vez de 144, RAM sem XMP, plano de energia Equilibrado. Em um PC já bem configurado, a diferença costuma ser pequena, e a Medição mostra isso.</p></details>
+        <details><summary>Por que o Windows avisa ao abrir?</summary><p>O executável não tem uma assinatura digital paga, então o SmartScreen mostra “aplicativo não reconhecido”. Clique em “Mais informações › Executar assim mesmo”, confira o SHA-256 publicado na release ou compile a partir do código.</p></details>
+        <details><summary>Os clipes pesam no jogo?</summary><p>A codificação roda no chip de vídeo dedicado da placa. No teste (RX 580, 1080p60) o processo usou 1–2% da CPU. Meça o seu caso: Medição com o replay ligado e desligado.</p></details>
+        <details><summary>Como desfaço tudo?</summary><p>Backup › Desfazer tudo. Cada configuração volta ao valor exato de antes, mesmo depois de reiniciar. Também há o ponto de restauração do Windows criado antes de otimizar.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DOWNLOAD ================= -->
+  <section class="download" id="baixar">
+    <div class="wrap">
+      <div>
+        <h2>Baixe e meça.</h2>
+        <p>Um arquivo, sem instalador. Abra, rode o Check-up e meça seu jogo antes de mudar qualquer coisa.</p>
+        <p class="req">Windows 10 21H2+ / 11 · x64 · ~67 MB · licença MIT</p>
+      </div>
+      <div class="cta" style="display:flex;gap:14px;flex-wrap:wrap">
+        <a class="btn primary" href="https://github.com/ryan-hugo/hertzo/releases/latest">Baixar Hertzo.exe</a>
+        <a class="btn" href="https://github.com/ryan-hugo/hertzo#-compilar">Compilar do código</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="brand" href="#"><img src="assets/icon-256.png" alt=""><span>HERTZO</span></a>
+    <p>Open source sob a licença MIT. Usa o PresentMon (Intel, MIT) e o Vortice.Windows (MIT). Não é afiliado a Microsoft, Intel, NVIDIA, AMD, Riot Games, Valve, Epic Games ou qualquer outra empresa citada.</p>
+  </div>
+</footer>
+
+<dialog id="zoom">
+  <form method="dialog"><button class="btn primary" aria-label="Fechar">✕</button></form>
+  <img alt="">
+</dialog>
+
+<script>
+  // entrada das placas ao rolar
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  }), { threshold: .12 });
+  document.querySelectorAll('.rise').forEach((el, i) => { el.style.transitionDelay = (i % 5) * 60 + 'ms'; io.observe(el); });
+
+  // ampliar telas
+  const dlg = document.getElementById('zoom');
+  document.querySelectorAll('.gallery button').forEach(b => b.addEventListener('click', () => {
+    dlg.querySelector('img').src = b.dataset.src;
+    dlg.querySelector('img').alt = b.querySelector('img').alt;
+    dlg.showModal();
+  }));
+  dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+</script>
+</body>
+</html>

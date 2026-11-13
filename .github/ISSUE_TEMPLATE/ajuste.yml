@@ -1,0 +1,43 @@
+name: Novo ajuste
+description: Sugerir uma otimização nova (com fonte)
+labels: [ajuste]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        O Hertzo só inclui ajustes **reversíveis** e com **evidência declarada**. Veja o CONTRIBUTING.md antes.
+  - type: textarea
+    id: what
+    attributes:
+      label: O que o ajuste muda
+      description: Chave de registro, serviço, configuração de energia… e o valor padrão do Windows.
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Fonte
+      description: Documentação da Microsoft ou do fabricante, ou benchmark controlado (antes × depois no mesmo cenário).
+    validations:
+      required: true
+  - type: dropdown
+    id: evidence
+    attributes:
+      label: Nível de evidência
+      options:
+        - Forte (documentado e/ou medido de forma controlada)
+        - Moderada (documentado, efeito depende do PC)
+        - Fraca (popular, sem teste controlado)
+    validations:
+      required: true
+  - type: textarea
+    id: who
+    attributes:
+      label: Para quem não serve
+      description: Notebooks, anti-cheats, jogos específicos, riscos…
+  - type: textarea
+    id: revert
+    attributes:
+      label: Como reverter
+    validations:
+      required: true

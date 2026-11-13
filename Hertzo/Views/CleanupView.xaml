@@ -1,0 +1,99 @@
+<UserControl x:Class="Hertzo.Views.CleanupView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:Hertzo.Ui">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Style="{StaticResource PageGrid}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <ui:PageHeader Number="07" Kicker="SEÇÃO 07 — LIMPEZA" Title="LIMPEZA E MEMÓRIA"
+                           Subtitle="Remove só o que é descartável. Nada de “limpar o registro”, nada de arquivos pessoais."/>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="18"/>
+                    <ColumnDefinition Width="320"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Recibo -->
+                <ui:Plate Reveal="Scan" Padding="0" Code="L-01 / RECIBO" VerticalAlignment="Top">
+                    <StackPanel>
+                        <DockPanel Margin="26,22,26,14">
+                            <TextBlock DockPanel.Dock="Right" Text="TAMANHO" Style="{StaticResource Label}" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
+                            <TextBlock Text="RECIBO DE LIMPEZA" Style="{StaticResource H2}"/>
+                        </DockPanel>
+                        <Rectangle Height="1" Fill="{StaticResource LineStrongBrush}" Margin="26,0"/>
+                        <ItemsControl ItemsSource="{Binding Targets}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <ui:Plate Reveal="Rise" Stagger="True" Delay="200" ShowCorners="False" HoverFx="False" Background="Transparent" BorderBrush="Transparent" Padding="26,0">
+                                        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" Padding="0,16">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <CheckBox IsChecked="{Binding Selected, Mode=TwoWay}" VerticalAlignment="Top" Margin="0,2,16,0"/>
+                                                <StackPanel Grid.Column="1" MaxWidth="440">
+                                                    <TextBlock Text="{Binding Name}" Style="{StaticResource H3}"/>
+                                                    <TextBlock Text="{Binding Description}" Style="{StaticResource Body}" FontSize="12.5" LineHeight="18" Margin="0,3,0,0"/>
+                                                    <TextBlock Text="{Binding Warning}" Style="{StaticResource Body}" FontSize="12" LineHeight="17" Foreground="{StaticResource WarnBrush}" Margin="0,4,0,0"
+                                                               Visibility="{Binding HasWarning, Converter={StaticResource BoolVis}}"/>
+                                                </StackPanel>
+                                                <!-- linha pontilhada de recibo -->
+                                                <Rectangle Grid.Column="2" Height="1" Fill="{StaticResource DotsBrush}" VerticalAlignment="Top" Margin="14,14,14,0"/>
+                                                <TextBlock Grid.Column="3" Text="{Binding SizeLabel}" FontFamily="{StaticResource FontMono}" FontSize="15"
+                                                           Foreground="{StaticResource TextBrush}" VerticalAlignment="Top" Margin="0,3,0,0" MinWidth="80" TextAlignment="Right"/>
+                                            </Grid>
+                                        </Border>
+                                    </ui:Plate>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <DockPanel Margin="26,18,26,24">
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding Total}" Style="{StaticResource Numeral}" FontSize="34" Foreground="{StaticResource AccentBrush}"/>
+                            <TextBlock Text="TOTAL SELECIONADO" Style="{StaticResource Label}" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </StackPanel>
+                </ui:Plate>
+
+                <StackPanel Grid.Column="2">
+                    <ui:Plate Reveal="Shutter" Delay="150" Code="L-02" Margin="0,0,0,18" Magnetic="True">
+                        <StackPanel>
+                            <TextBlock Text="A LIBERAR" Style="{StaticResource Label}"/>
+                            <TextBlock Text="{Binding Total}" Style="{StaticResource Numeral}" FontSize="66" Foreground="{StaticResource AccentBrush}" Margin="-2,-2,0,6"/>
+                            <Button Content="LIMPAR SELECIONADOS" Style="{StaticResource BtnPrimary}" Command="{Binding CleanCommand}" HorizontalAlignment="Stretch"/>
+                            <Button Content="MEDIR DE NOVO" Style="{StaticResource Btn}" Command="{Binding ScanCommand}" HorizontalAlignment="Stretch" Margin="0,10,0,0"/>
+                            <TextBlock Text="MEDINDO…" Style="{StaticResource Label}" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" Margin="0,12,0,0"
+                                       Visibility="{Binding Working, Converter={StaticResource BoolVis}}"/>
+                        </StackPanel>
+                    </ui:Plate>
+
+                    <ui:Plate Reveal="Rise" Delay="300" Code="L-03" Margin="0,0,0,18">
+                        <StackPanel>
+                            <TextBlock Text="MEMÓRIA EM ESPERA" Style="{StaticResource H2}" FontSize="22"/>
+                            <TextBlock Text="Esvazia o cache “em espera” do Windows (como o ISLC). Ajuda contra travadas em PCs com 8–16 GB; com bastante RAM, a diferença é nula."
+                                       Style="{StaticResource Body}" FontSize="12.5" LineHeight="18" Margin="0,8,0,14"/>
+                            <Button Content="LIBERAR AGORA" Style="{StaticResource Btn}" Command="{Binding StandbyCommand}" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </ui:Plate>
+
+                    <ui:Plate Reveal="Glitch" Delay="450" Code="L-04">
+                        <StackPanel>
+                            <TextBlock Text="CACHE DNS" Style="{StaticResource H2}" FontSize="22"/>
+                            <TextBlock Text="Resolve erros de “servidor não encontrado” depois de trocar de rede. Não altera o ping."
+                                       Style="{StaticResource Body}" FontSize="12.5" LineHeight="18" Margin="0,8,0,14"/>
+                            <Button Content="LIMPAR CACHE DNS" Style="{StaticResource Btn}" Command="{Binding DnsCommand}" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </ui:Plate>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,17 @@
+# build
+bin/
+obj/
+dist/
+publish/
+*.user
+.vs/
+.vscode/
+*.binlog
+
+# ambiente de testes local
+.devtmp/
+
+# sistema
+Thumbs.db
+desktop.ini
+.DS_Store

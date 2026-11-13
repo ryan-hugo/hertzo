@@ -1,0 +1,286 @@
+<Window x:Class="Hertzo.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Hertzo.ViewModels"
+        xmlns:v="clr-namespace:Hertzo.Views"
+        xmlns:ui="clr-namespace:Hertzo.Ui"
+        Title="Hertzo — Otimizador para jogos"
+        Icon="Assets/hertzo.ico"
+        Width="1380" Height="880" MinWidth="1120" MinHeight="720"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource Bg0Brush}"
+        Foreground="{StaticResource TextBrush}"
+        FontFamily="{StaticResource FontUi}"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="40" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}"><v:DashboardView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CheckupViewModel}"><v:CheckupView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TweaksViewModel}"><v:TweaksView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:GamesViewModel}"><v:GamesView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:BenchViewModel}"><v:BenchView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ClipsViewModel}"><v:ClipsView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CleanupViewModel}"><v:CleanupView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:StartupViewModel}"><v:StartupView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:BackupViewModel}"><v:BackupView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TransparencyViewModel}"><v:TransparencyView/></DataTemplate>
+
+        <Storyboard x:Key="BusyAnim" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetName="B1" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.25" To="1" Duration="0:0:0.38" AutoReverse="True"/>
+            <DoubleAnimation Storyboard.TargetName="B2" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.25" To="1" Duration="0:0:0.38" AutoReverse="True" BeginTime="0:0:0.12"/>
+            <DoubleAnimation Storyboard.TargetName="B3" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.25" To="1" Duration="0:0:0.38" AutoReverse="True" BeginTime="0:0:0.24"/>
+            <DoubleAnimation Storyboard.TargetName="B4" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.25" To="1" Duration="0:0:0.38" AutoReverse="True" BeginTime="0:0:0.36"/>
+        </Storyboard>
+    </Window.Resources>
+
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="Window.Loaded">
+            <BeginStoryboard Storyboard="{StaticResource BusyAnim}"/>
+        </EventTrigger>
+    </Window.Triggers>
+
+    <Grid x:Name="Root" Background="{StaticResource Bg0Brush}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="252"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ================= TRILHO LATERAL ================= -->
+        <Grid Grid.Column="0">
+            <Rectangle Width="1" HorizontalAlignment="Right" Fill="{StaticResource LineBrush}"/>
+            <DockPanel Margin="0,0,1,0">
+                <!-- Marca -->
+                <Grid DockPanel.Dock="Top" Margin="20,20,20,18">
+                    <StackPanel Orientation="Horizontal">
+                        <!-- mesmo desenho do ícone do .exe (tools/make-icon.ps1), em grade de 256 -->
+                        <Viewbox Width="44" Height="44">
+                            <Canvas Width="256" Height="256">
+                                <Rectangle Canvas.Left="8" Canvas.Top="8" Width="240" Height="240" RadiusX="50" RadiusY="50" Stroke="#2EEDE6D6" StrokeThickness="2">
+                                    <Rectangle.Fill>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#26211C" Offset="0"/>
+                                            <GradientStop Color="#0D0C0A" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Rectangle.Fill>
+                                </Rectangle>
+                                <Path Fill="#96EDE6D6" Data="M40,40 h30 v7 h-30 Z M40,40 h7 v30 h-7 Z M216,40 h-30 v7 h30 Z M216,40 h-7 v30 h7 Z M40,216 h30 v-7 h-30 Z M40,216 h7 v-30 h-7 Z M216,216 h-30 v-7 h30 Z M216,216 h-7 v-30 h7 Z"/>
+                                <Path Data="M0,140 H88 L106,112 L122,140 L142,76 L166,188 L182,140 H196" Stroke="{StaticResource AccentBrush}"
+                                      StrokeThickness="17" StrokeLineJoin="Miter" StrokeMiterLimit="12">
+                                    <Path.Clip><RectangleGeometry Rect="8,8,240,240" RadiusX="50" RadiusY="50"/></Path.Clip>
+                                </Path>
+                                <Rectangle Canvas.Left="203" Canvas.Top="125" Width="30" Height="30" Fill="{StaticResource TextBrush}"/>
+                            </Canvas>
+                        </Viewbox>
+                        <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="HERTZO" Style="{StaticResource Numeral}" FontSize="30" Margin="0,-6,0,-4"/>
+                            <TextBlock Text="TELEMETRIA · SISTEMA" Style="{StaticResource Label}" FontSize="9"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Rodapé do trilho -->
+                <Border DockPanel.Dock="Bottom" Margin="20,0,20,20" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="0,14,0,0">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding Clock}" Style="{StaticResource Label}" Foreground="{StaticResource TextDimBrush}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Rectangle Width="7" Height="7" Fill="{StaticResource OkBrush}" VerticalAlignment="Center">
+                                    <Rectangle.Triggers>
+                                        <EventTrigger RoutedEvent="Loaded">
+                                            <BeginStoryboard>
+                                                <Storyboard RepeatBehavior="Forever">
+                                                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity">
+                                                        <DiscreteDoubleKeyFrame Value="1" KeyTime="0:0:0"/>
+                                                        <DiscreteDoubleKeyFrame Value="0.2" KeyTime="0:0:1"/>
+                                                        <DiscreteDoubleKeyFrame Value="1" KeyTime="0:0:1.2"/>
+                                                    </DoubleAnimationUsingKeyFrames>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </EventTrigger>
+                                    </Rectangle.Triggers>
+                                </Rectangle>
+                                <TextBlock Text="ADMIN · ONLINE" Style="{StaticResource Label}" Foreground="{StaticResource TextDimBrush}" Margin="8,0,0,0"/>
+                            </StackPanel>
+                        </DockPanel>
+                        <TextBlock Text="Toda alteração tem backup e volta com um clique." Style="{StaticResource Body}" FontSize="12" LineHeight="17" Margin="0,10,0,0"/>
+                        <TextBlock Text="{Binding Version}" Style="{StaticResource Label}" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Navegação -->
+                <StackPanel>
+                    <DockPanel Margin="20,0,20,2">
+                        <TextBlock DockPanel.Dock="Right" Text="6 PILARES · 10" Style="{StaticResource Label}"/>
+                        <TextBlock Text="ÍNDICE" Style="{StaticResource Label}"/>
+                    </DockPanel>
+                    <!-- menu agrupado pelos pilares do Hertzo -->
+                    <ItemsControl ItemsSource="{Binding NavGroups}" WindowChrome.IsHitTestVisibleInChrome="True">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" Padding="20,12,16,5">
+                                        <DockPanel>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding Hint}" FontFamily="{StaticResource FontMono}" FontSize="8.5"
+                                                       Foreground="{StaticResource TextMuteBrush}" VerticalAlignment="Bottom" Margin="0,0,0,1"/>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Rectangle Width="6" Height="6" Fill="{StaticResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,7,0"/>
+                                                <TextBlock Text="{Binding Title}" FontFamily="{StaticResource FontMono}" FontSize="10" FontWeight="Bold"
+                                                           Foreground="{StaticResource TextBrush}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                    <ItemsControl ItemsSource="{Binding Items}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <RadioButton Style="{StaticResource NavItem}" IsChecked="{Binding IsSelected, Mode=TwoWay}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </DockPanel>
+        </Grid>
+
+        <!-- ================= ÁREA PRINCIPAL ================= -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Rectangle Grid.RowSpan="2" Fill="{DynamicResource GrainBrush}" IsHitTestVisible="False"/>
+
+            <!-- Barra superior: trilha + letreiro ao vivo + controles da janela -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Rectangle Grid.ColumnSpan="3" Height="1" VerticalAlignment="Bottom" Fill="{StaticResource LineBrush}"/>
+                <Border Grid.Column="0" Background="{StaticResource TextBrush}" Padding="12,0" Margin="0,0,0,1">
+                    <TextBlock Text="{Binding Crumb}" FontFamily="{StaticResource FontMono}" FontSize="10.5" FontWeight="Bold"
+                               Foreground="{StaticResource AccentInkBrush}" VerticalAlignment="Center"/>
+                </Border>
+                <ui:Ticker Grid.Column="1" Text="{Binding TickerText}" Height="16" VerticalAlignment="Center" Margin="16,0" IsHitTestVisible="False"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top" WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button Style="{StaticResource CaptionBtn}" Click="OnMinimize" ToolTip="Minimizar">
+                        <Path Data="M0,0 H10" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1"/>
+                    </Button>
+                    <Button Style="{StaticResource CaptionBtn}" Click="OnMaximize" ToolTip="Maximizar">
+                        <Rectangle Width="10" Height="10" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1"/>
+                    </Button>
+                    <Button Style="{StaticResource CaptionClose}" Click="OnClose" ToolTip="Fechar">
+                        <Path Data="M0,0 L10,10 M10,0 L0,10" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <ContentControl Grid.Row="1" Content="{Binding Current.Page}" Focusable="False"/>
+        </Grid>
+
+        <!-- ================= AVISOS: etiquetas impressas ================= -->
+        <ItemsControl Grid.ColumnSpan="2" ItemsSource="{Binding Toasts}" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                      Margin="0,0,28,28" Width="400" Panel.ZIndex="50">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <ui:Plate Reveal="Glitch" Padding="0" Margin="0,10,0,0" HoverFx="False" Background="{StaticResource Bg2Brush}" BorderBrush="{StaticResource LineStrongBrush}">
+                        <ui:Plate.Effect>
+                            <DropShadowEffect BlurRadius="0" ShadowDepth="6" Direction="315" Opacity="1" Color="#000000"/>
+                        </ui:Plate.Effect>
+                        <DockPanel>
+                            <Border DockPanel.Dock="Left" Width="44" Background="{Binding Tone, Converter={StaticResource ToneBrush}}">
+                                <TextBlock Text="!" Style="{StaticResource Numeral}" FontSize="22" Foreground="{StaticResource AccentInkBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Margin="14,11,14,12">
+                                <TextBlock Text="AVISO DO SISTEMA" Style="{StaticResource Label}" FontSize="9"/>
+                                <TextBlock Text="{Binding Message}" Style="{StaticResource Body}" Foreground="{StaticResource TextBrush}" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </ui:Plate>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- ================= OCUPADO ================= -->
+        <Grid Grid.ColumnSpan="2" Background="{StaticResource ScrimBrush}" Panel.ZIndex="80"
+              Visibility="{Binding IsBusy, Converter={StaticResource BoolVis}}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="460">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Height="34">
+                    <Rectangle x:Name="B1" Style="{StaticResource BusyTick}" VerticalAlignment="Bottom"/>
+                    <Rectangle x:Name="B2" Style="{StaticResource BusyTick}" VerticalAlignment="Bottom"/>
+                    <Rectangle x:Name="B3" Style="{StaticResource BusyTick}" VerticalAlignment="Bottom"/>
+                    <Rectangle x:Name="B4" Style="{StaticResource BusyTick}" VerticalAlignment="Bottom"/>
+                </StackPanel>
+                <TextBlock Text="PROCESSANDO" Style="{StaticResource Label}" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" Margin="0,20,0,0"/>
+                <TextBlock Text="{Binding BusyMessage}" Style="{StaticResource H3}" TextAlignment="Center" Margin="0,8,0,0"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- ================= DIÁLOGO ================= -->
+        <Grid Grid.ColumnSpan="2" Background="{StaticResource ScrimBrush}" Panel.ZIndex="90"
+              Visibility="{Binding HasDialog, Converter={StaticResource BoolVis}}">
+            <ContentControl Content="{Binding Dialog}" HorizontalAlignment="Center" VerticalAlignment="Center" Focusable="False">
+                <ContentControl.ContentTemplate>
+                    <DataTemplate>
+                        <ui:Plate Reveal="Shutter" Width="560" Padding="0" HoverFx="False" Background="{StaticResource Bg1Brush}" BorderBrush="{StaticResource LineStrongBrush}">
+                            <StackPanel>
+                                <Border x:Name="Band" Height="34" Background="{StaticResource AccentBrush}">
+                                    <DockPanel Margin="16,0">
+                                        <TextBlock DockPanel.Dock="Right" Text="HERTZO / CONFIRMAÇÃO" FontFamily="{StaticResource FontMono}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentInkBrush}" VerticalAlignment="Center"/>
+                                        <Border Width="60" Background="{StaticResource HatchMuteBrush}" Opacity="0.6" HorizontalAlignment="Left" Margin="0,8"/>
+                                    </DockPanel>
+                                </Border>
+                                <StackPanel Margin="28,24,28,26">
+                                    <TextBlock Text="{Binding Title, Converter={StaticResource Upper}}" Style="{StaticResource H2}" FontSize="30" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding Message}" Style="{StaticResource Body}" Margin="0,12,0,0"/>
+                                    <ScrollViewer MaxHeight="220" VerticalScrollBarVisibility="Auto" Margin="0,14,0,0"
+                                                  Visibility="{Binding HasItems, Converter={StaticResource BoolVis}}">
+                                        <ItemsControl ItemsSource="{Binding Items}" AlternationCount="100">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="0,7">
+                                                        <DockPanel>
+                                                            <TextBlock DockPanel.Dock="Left" Width="34" Style="{StaticResource Label}" Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"
+                                                                       Text="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=ContentPresenter}, Converter={StaticResource Index}}"/>
+                                                            <TextBlock Text="{Binding}" Style="{StaticResource Body}" Foreground="{StaticResource TextBrush}"/>
+                                                        </DockPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                    <CheckBox Content="{Binding CheckText}" IsChecked="{Binding CheckValue, Mode=TwoWay}" Margin="0,18,0,0"
+                                              Visibility="{Binding HasCheck, Converter={StaticResource BoolVis}}"/>
+                                    <TextBlock Text="{Binding Countdown}" Style="{StaticResource Label}" Foreground="{StaticResource WarnBrush}" FontSize="12" Margin="0,16,0,0"
+                                               Visibility="{Binding Countdown, Converter={StaticResource NullVis}}"/>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,26,0,0">
+                                        <Button Content="{Binding CancelText, Converter={StaticResource Upper}}" Style="{StaticResource Btn}" Margin="0,0,12,0"
+                                                Command="{Binding DataContext.DialogCancel, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                Visibility="{Binding HasCancel, Converter={StaticResource BoolVis}}"/>
+                                        <Button x:Name="Ok" Content="{Binding ConfirmText, Converter={StaticResource Upper}}" Style="{StaticResource BtnPrimary}"
+                                                Command="{Binding DataContext.DialogConfirm, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+                        </ui:Plate>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Danger}" Value="True">
+                                <Setter TargetName="Band" Property="Background" Value="{StaticResource BadBrush}"/>
+                                <Setter TargetName="Ok" Property="Style" Value="{StaticResource BtnDanger}"/>
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ContentControl.ContentTemplate>
+            </ContentControl>
+        </Grid>
+    </Grid>
+</Window>

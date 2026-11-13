@@ -1,0 +1,50 @@
+name: Problema
+description: Algo não funcionou como deveria
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por reportar! **Problemas de segurança não vão aqui**: use a aba Security › Report a vulnerability.
+  - type: textarea
+    id: what
+    attributes:
+      label: O que aconteceu
+      description: E o que você esperava que acontecesse.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Como reproduzir
+      placeholder: |
+        1. Abri a tela …
+        2. Cliquei em …
+        3. Apareceu …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versão do Hertzo
+      placeholder: "1.0.0 (aparece no rodapé do menu)"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows
+      placeholder: "Windows 11 24H2 (Win + R › winver)"
+    validations:
+      required: true
+  - type: input
+    id: hw
+    attributes:
+      label: CPU e GPU
+      placeholder: "Ryzen 7 5700X · Radeon RX 580"
+  - type: textarea
+    id: log
+    attributes:
+      label: Log de erros
+      description: Conteúdo de `%LocalAppData%\Hertzo\erros.log`, se houver. Confira se não há nada pessoal antes de colar.
+      render: text
