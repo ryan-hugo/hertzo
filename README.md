@@ -4,7 +4,6 @@
 
 <p align="center">
   <a href="https://github.com/ryan-hugo/hertzo/releases/latest"><img alt="Baixar" src="https://img.shields.io/github/v/release/ryan-hugo/hertzo?label=baixar&style=flat-square&color=FF5B1F&labelColor=0D0C0A"></a>
-  <a href="https://github.com/ryan-hugo/hertzo/actions/workflows/build.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/ryan-hugo/hertzo/build.yml?branch=main&style=flat-square&labelColor=0D0C0A&label=build"></a>
   <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-EDE6D6?style=flat-square&labelColor=0D0C0A">
   <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10-EDE6D6?style=flat-square&labelColor=0D0C0A">
   <a href="LICENSE"><img alt="Licença MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-EDE6D6?style=flat-square&labelColor=0D0C0A"></a>
