@@ -102,5 +102,5 @@ foreach ($l in $porDia.Values | Where-Object { $_.Dia -ge $desde } | Sort-Object
 Write-Host "  * total acumulado de downloads no dia em que o script rodou" -ForegroundColor DarkGray
 Write-Host "  Histórico salvo em $hist" -ForegroundColor DarkGray
 Write-Host ''
-Write-Host '  Visitas ao site (ryan-hugo.github.io/hertzo) não aparecem aqui: o GitHub Pages não tem contador próprio.' -ForegroundColor DarkGray
+Write-Host '  Visitas e cliques no site (ryan-hugo.github.io/hertzo): painel do GoatCounter em https://hornet.goatcounter.com' -ForegroundColor DarkGray
 Write-Host ''
