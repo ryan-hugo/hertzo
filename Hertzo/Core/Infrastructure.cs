@@ -212,37 +212,59 @@ public static class AppPaths
 
     // ---------------------------------------------------------------------
     // Migração do nome antigo (Pulso): copia, nunca apaga. As pastas antigas ficam como estavam.
+    // Enquanto o arquivo do Hertzo for uma cópia intocada, mudanças feitas depois no Pulso são trazidas de novo;
+    // a partir do momento em que o Hertzo grava o arquivo, a versão dele passa a valer.
     // ---------------------------------------------------------------------
     private const string LegacyName = "Pulso";
 
     private static void MigrateMachineData(string dir)
     {
-        var journal = Path.Combine(dir, "journal.json");
         var old = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), LegacyName, "journal.json");
         // Só confia no diário antigo se ele for dos Administradores; o conteúdo ainda passa pela validação do Journal.
-        if (File.Exists(journal) || !File.Exists(old) || !Guard.OwnedByAdmins(old)) return;
-        File.Copy(old, journal);
+        if (File.Exists(old) && Guard.OwnedByAdmins(old))
+            SyncLegacyFile(old, Path.Combine(dir, "journal.json"));
     }
 
     private static void MigrateUserData(string dir)
     {
         var old = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), LegacyName);
-        if (Directory.Exists(dir) || !Directory.Exists(old)) return;
+        if (!Directory.Exists(old)) return;
         foreach (var src in Directory.EnumerateFiles(old, "*", SearchOption.AllDirectories))
         {
-            var rel = Path.GetRelativePath(old, src);
-            var dst = Path.Combine(dir, rel);
-            Directory.CreateDirectory(Path.GetDirectoryName(dst)!);
-            File.Copy(src, dst, false);
+            if (src.EndsWith(".tmp", StringComparison.OrdinalIgnoreCase)) continue;
+            var dst = Path.Combine(dir, Path.GetRelativePath(old, src));
+            // As medições guardam o caminho do CSV bruto: aponta para a cópia nova.
+            Action<string>? fix = Path.GetFileName(src).Equals("medicoes.json", StringComparison.OrdinalIgnoreCase)
+                ? p =>
+                {
+                    static string Esc(string x) => System.Text.Json.JsonEncodedText.Encode(x + "\\").ToString();
+                    File.WriteAllText(p, File.ReadAllText(p).Replace(Esc(old), Esc(dir), StringComparison.OrdinalIgnoreCase));
+                }
+                : null;
+            try { SyncLegacyFile(src, dst, fix); } catch { }
         }
-        // As medições guardam o caminho do CSV bruto: aponta para a cópia nova.
-        var store = Path.Combine(dir, "medicoes.json");
-        if (File.Exists(store))
+    }
+
+    /// <summary>
+    /// Copia do Pulso se o arquivo ainda não existe no Hertzo, ou se o do Hertzo é uma cópia que nunca foi gravada
+    /// (data de modificação anterior à de criação) e o do Pulso mudou depois.
+    /// </summary>
+    private static void SyncLegacyFile(string src, string dst, Action<string>? fix = null)
+    {
+        var s = new FileInfo(src);
+        if (!s.Exists) return;
+        var d = new FileInfo(dst);
+        if (d.Exists)
         {
-            static string Esc(string p) => System.Text.Json.JsonEncodedText.Encode(p + "\\").ToString();
-            var text = File.ReadAllText(store);
-            File.WriteAllText(store, text.Replace(Esc(old), Esc(dir), StringComparison.OrdinalIgnoreCase));
+            bool untouchedCopy = d.LastWriteTimeUtc < d.CreationTimeUtc.AddSeconds(-2);
+            if (!untouchedCopy || s.LastWriteTimeUtc <= d.LastWriteTimeUtc) return;
         }
+        Directory.CreateDirectory(d.DirectoryName!);
+        File.Copy(src, dst, true);
+        fix?.Invoke(dst);
+        // marca como "cópia intocada": criada agora, modificada na data do original
+        File.SetCreationTimeUtc(dst, DateTime.UtcNow);
+        File.SetLastWriteTimeUtc(dst, s.LastWriteTimeUtc);
     }
 }
 

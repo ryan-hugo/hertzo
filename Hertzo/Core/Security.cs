@@ -36,6 +36,10 @@ public static partial class Guard
         Native.EnablePrivilege("SeTakeOwnershipPrivilege");
         Native.EnablePrivilege("SeRestorePrivilege");
 
+        // "runtime" guarda as DLLs que o Hertzo carrega (ver Program.SafeRuntimeDir). Se a pasta ainda não era
+        // protegida, qualquer coisa lá dentro pode ter sido plantada: apaga, o .NET extrai de novo.
+        try { var rt = Path.Combine(dir, "runtime"); if (Directory.Exists(rt)) Directory.Delete(rt, true); } catch { }
+
         var sec = new DirectorySecurity();
         sec.SetOwner(Admins);
         sec.SetAccessRuleProtection(true, false);
@@ -71,6 +75,8 @@ public static partial class Guard
                 try { if (e is FileInfo f) f.Delete(); else ((DirectoryInfo)e).Delete(true); } catch { }
             }
         }
+        // segunda tentativa, agora que tudo é dos Administradores
+        try { var rt = Path.Combine(dir, "runtime"); if (Directory.Exists(rt)) Directory.Delete(rt, true); } catch { }
     }
 
     private static void ResetToInherited(string path)

@@ -27,7 +27,7 @@ body:
     id: version
     attributes:
       label: Versão do Hertzo
-      placeholder: "1.0.0 (aparece no rodapé do menu)"
+      placeholder: "1.1.0 (aparece no rodapé do menu)"
     validations:
       required: true
   - type: input

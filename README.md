@@ -64,6 +64,7 @@ O Hertzo é organizado em cinco pilares, como o menu do app.
 - 30, 60 ou 120 FPS, resolução nativa, 1080p ou 720p (a redução é feita na GPU), H.264 no **encoder de hardware** (AMD AMF, NVIDIA NVENC, Intel QuickSync).
 - **Áudio do jogo e do microfone** com volume ao vivo, medidores e uma faixa extra só com o microfone, para edição.
 - **Aviso na tela do jogo** (“CLIPE SALVO · 30 S”, ● REC), sem roubar foco nem cliques. Atalhos configuráveis.
+- **Sempre pronto:** o replay liga toda vez que o Hertzo abre, o Hertzo pode abrir sozinho com o Windows (só na bandeja) e fechar a janela pode deixá-lo na bandeja. Nos três casos o replay e os atalhos continuam valendo.
 
 ### D · Manter
 - **Limpeza** do que é descartável: temporários, relatórios de erro, caches de shader (DirectX, NVIDIA, AMD), despejos de memória de telas azuis e Lixeira. Nada de “limpar o registro”.
@@ -119,6 +120,9 @@ O Hertzo é organizado em cinco pilares, como o menu do app.
 - `%ProgramData%\Hertzo` é **só dos administradores**. Programas sem admin não conseguem plantar ou trocar arquivos lá.
 - O **diário é validado**: cada entrada só pode restaurar um valor que aquele ajuste realmente altera. Um `journal.json` adulterado não consegue escrever em `Run`, em `IFEO\…\Debugger` nem em nenhum outro lugar.
 - O **PresentMon** embutido é conferido por SHA-256 e pelo dono do arquivo antes de cada uso.
+- As **DLLs nativas** do executável único são extraídas em `%ProgramData%\Hertzo\runtime`, que só administradores alteram, e não em `%TEMP%`.
+- **Abrir com o Windows** usa uma tarefa agendada que aponta para uma cópia em `Arquivos de Programas\Hertzo`. Nenhum programa sem admin consegue trocar o que roda como admin no logon.
+- As configurações são gravadas de forma atômica, com cópia de segurança, e só uma instância do Hertzo roda por vez.
 - A **Limpeza resiste a junções**: o caminho real de cada arquivo é conferido no momento de apagar.
 - **Nada abre como admin:** sites, pastas e clipes abrem pelo Explorer do usuário.
 
@@ -153,7 +157,10 @@ A codificação roda no chip de vídeo dedicado da placa, não nos núcleos da G
 <details>
 <summary><b>Como desinstalo?</b></summary>
 
-Antes, use **Backup › Desfazer tudo**. Depois apague o `Hertzo.exe` e, se quiser, as pastas `%ProgramData%\Hertzo` e `%LocalAppData%\Hertzo`.
+1. Use **Backup › Desfazer tudo**.
+2. Desligue **Clipes › Sempre › Abrir com o Windows**. Isso remove a tarefa agendada e a cópia em `Arquivos de Programas\Hertzo`.
+3. Feche pelo ícone da bandeja, em **Sair do Hertzo**.
+4. Apague o `Hertzo.exe` e, se quiser, as pastas `%ProgramData%\Hertzo` e `%LocalAppData%\Hertzo`.
 </details>
 
 ## 🛠️ Compilar

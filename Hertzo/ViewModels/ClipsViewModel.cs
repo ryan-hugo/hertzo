@@ -74,8 +74,20 @@ public sealed class ClipsViewModel : ObservableObject, IPage
 
     public string HotkeyLabel => _s.SaveKey.Label;
 
+    /// <summary>A tela de clipes do app (usada pelo ícone da bandeja).</summary>
+    public static ClipsViewModel? Current { get; private set; }
+
     public ClipsViewModel()
     {
+        Current = this;
+        // "Sempre ligar o replay ao abrir": vale mesmo que ele tenha sido desligado na última vez
+        if (_s.AutoArm && !_s.Armed) { _s.Armed = true; _s.Save(); }
+        _startWithWindows = File.Exists(AutoStart.InstalledExe); // palpite rápido; confirmado no Agendador logo abaixo
+        Task.Run(AutoStart.IsEnabled).ContinueWith(t =>
+        {
+            if (t.IsCompletedSuccessfully) { _startWithWindows = t.Result; OnPropertyChanged(nameof(StartWithWindows)); }
+        }, TaskScheduler.FromCurrentSynchronizationContext());
+
         var d0 = SystemInfo.Displays().FirstOrDefault();
         _screen = d0 != null ? (d0.Width, d0.Height) : (1920, 1080);
 
@@ -191,6 +203,64 @@ public sealed class ClipsViewModel : ObservableObject, IPage
 
     public bool Armed => _s.Armed;
     public bool NotArmed => !_s.Armed;
+
+    // ---- 08 sempre ativo ----
+    public bool AutoArm
+    {
+        get => _s.AutoArm;
+        set
+        {
+            _s.AutoArm = value; _s.Save(); OnPropertyChanged();
+            if (value && !_s.Armed) Toggle(); // ligar a opção já liga o replay agora
+        }
+    }
+
+    public bool CloseToTray
+    {
+        get => AppSettings.Current.CloseToTray;
+        set { AppSettings.Current.CloseToTray = value; AppSettings.Current.Save(); OnPropertyChanged(); }
+    }
+
+    private bool _startWithWindows, _autoStartBusy;
+    public bool StartWithWindows
+    {
+        get => _startWithWindows;
+        set { if (value != _startWithWindows && !_autoStartBusy) _ = SetStartWithWindows(value); }
+    }
+    public bool AutoStartBusy { get => _autoStartBusy; private set { Set(ref _autoStartBusy, value); OnPropertyChanged(nameof(AutoStartIdle)); } }
+    public bool AutoStartIdle => !_autoStartBusy;
+
+    private async Task SetStartWithWindows(bool on)
+    {
+        AutoStartBusy = true;
+        try
+        {
+            await Task.Run(() => { if (on) AutoStart.Enable(); else AutoStart.Disable(); });
+            _startWithWindows = on;
+            UiHost.Toast(on
+                ? "O Hertzo vai abrir sozinho, na bandeja, quando você entrar no Windows."
+                : "O Hertzo não abre mais com o Windows.", on ? Tone.Ok : Tone.Info);
+        }
+        catch (Exception ex)
+        {
+            UiHost.Error(ex);
+            _startWithWindows = await Task.Run(AutoStart.IsEnabled);
+        }
+        finally
+        {
+            AutoStartBusy = false;
+            OnPropertyChanged(nameof(StartWithWindows));
+        }
+    }
+
+    // ---- usado pelo ícone da bandeja ----
+    public void ToggleReplay() => Toggle();
+    public void SaveReplayNow() => SaveClip();
+    public string TrayStatus => _manual ? $"Gravando · {BigValue}"
+        : !_s.Armed ? "Replay desligado"
+        : _engine?.Running == true ? $"Replay gravando · {BigValue} s na memória"
+        : _s.OnlyInGame ? "Replay ligado · aguardando um jogo"
+        : "Replay ligado";
     public bool OnlyInGame
     {
         get => _s.OnlyInGame;

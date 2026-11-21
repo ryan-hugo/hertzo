@@ -2,6 +2,24 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), com versões em [SemVer](https://semver.org/lang/pt-BR/).
 
+## [1.1.0] — 2026-11-21
+
+### Novo
+- **Segundo plano e bandeja:** o Hertzo ganha um ícone perto do relógio, com abrir, salvar o replay, ligar/desligar o replay e sair. Fechar a janela deixa o Hertzo na bandeja (opcional), e o replay e os atalhos continuam valendo.
+- **Abrir com o Windows:** abre sozinho, só na bandeja, ao entrar no Windows. Usa uma tarefa agendada com privilégios elevados e uma cópia em `Arquivos de Programas\Hertzo`, onde programas sem admin não conseguem trocar o executável. Também dá para usar `Hertzo.exe --autostart-on` / `--autostart-off`.
+- **Replay sempre ligado:** liga o replay toda vez que o Hertzo abre, mesmo que tenha sido desligado antes.
+- Tudo isso na nova seção **Clipes › 08 · Sempre**.
+
+### Corrigido
+- **Configurações que “sumiam”:**
+  - os arquivos de configuração agora são gravados de forma atômica e com cópia de segurança (`.bak`);
+  - se um arquivo estiver ilegível, o Hertzo usa a cópia em vez de voltar aos padrões em silêncio;
+  - abrir o Hertzo de novo traz a janela já aberta, em vez de criar uma segunda instância que disputava atalhos e sobrescrevia as configurações.
+- **Migração do Pulso:** enquanto o Hertzo ainda não tiver gravado um arquivo, mudanças feitas depois no Pulso (backups, clipes, configurações) são trazidas de novo.
+
+### Segurança
+- O executável único extraía as DLLs nativas do WPF para `%TEMP%\.net`, onde qualquer programa sem admin pode trocá-las, e elas eram carregadas com privilégios de administrador. Agora o Hertzo se reabre com a extração apontando para `%ProgramData%\Hertzo\runtime`, só de administradores. Isso era pré-requisito para o início automático, que roda como admin sem perguntar.
+
 ## [1.0.0] — 2026-11-13
 
 Primeira versão pública.

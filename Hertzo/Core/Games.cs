@@ -298,7 +298,7 @@ public static partial class GameScanner
     }
 
     public static void SaveManual(IEnumerable<string> paths)
-        => File.WriteAllText(ManualFile, JsonSerializer.Serialize(paths.Distinct(StringComparer.OrdinalIgnoreCase).ToList()));
+        => AtomicFile.WriteAllText(ManualFile, JsonSerializer.Serialize(paths.Distinct(StringComparer.OrdinalIgnoreCase).ToList()));
 
     public static readonly string[] GpuPanelTips =
     [

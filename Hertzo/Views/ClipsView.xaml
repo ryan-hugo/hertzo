@@ -75,6 +75,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <ui:PageHeader Number="06" Kicker="SEÇÃO 06 — CLIPES" Title="REPLAY E GRAVAÇÃO"
@@ -438,8 +439,66 @@
                 </Grid>
             </ui:Plate>
 
+            <!-- ================= SEMPRE ATIVO ================= -->
+            <ui:Plate Grid.Row="4" Reveal="Rise" Delay="220" Padding="0" Margin="0,0,0,18">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="58"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Background="{StaticResource HatchAccentBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,1,0">
+                        <Border Background="{StaticResource Bg1Brush}" VerticalAlignment="Center" Padding="0,10">
+                            <TextBlock Text="08 · SEMPRE" Style="{StaticResource Numeral}" FontSize="19" HorizontalAlignment="Center">
+                                <TextBlock.LayoutTransform><RotateTransform Angle="-90"/></TextBlock.LayoutTransform>
+                            </TextBlock>
+                        </Border>
+                    </Border>
+
+                    <Grid Grid.Column="1" Margin="24,20,24,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="1"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="1"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <DockPanel Margin="0,0,22,0">
+                            <ToggleButton DockPanel.Dock="Right" Style="{StaticResource Switch}" IsChecked="{Binding AutoArm, Mode=TwoWay}" VerticalAlignment="Top"/>
+                            <StackPanel Margin="0,0,16,0">
+                                <TextBlock Text="REPLAY SEMPRE LIGADO" Style="{StaticResource SecTitle}"/>
+                                <TextBlock Text="Toda vez que o Hertzo abrir, o replay liga sozinho — mesmo que você tenha desligado antes. Com “só com jogo aberto”, ele espera o jogo para gravar."
+                                           Style="{StaticResource Body}" FontSize="12.5" LineHeight="18" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <Rectangle Grid.Column="1" Fill="{StaticResource LineBrush}"/>
+
+                        <DockPanel Grid.Column="2" Margin="22,0,22,0">
+                            <ToggleButton DockPanel.Dock="Right" Style="{StaticResource Switch}" IsChecked="{Binding StartWithWindows, Mode=TwoWay}"
+                                          IsEnabled="{Binding AutoStartIdle}" VerticalAlignment="Top"/>
+                            <StackPanel Margin="0,0,16,0">
+                                <TextBlock Text="ABRIR COM O WINDOWS" Style="{StaticResource SecTitle}"/>
+                                <TextBlock Text="Abre em segundo plano, só com o ícone perto do relógio, ao entrar no Windows. Usa uma tarefa agendada e uma cópia em Arquivos de Programas, onde outros programas não conseguem mexer."
+                                           Style="{StaticResource Body}" FontSize="12.5" LineHeight="18" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <Rectangle Grid.Column="3" Fill="{StaticResource LineBrush}"/>
+
+                        <DockPanel Grid.Column="4" Margin="22,0,0,0">
+                            <ToggleButton DockPanel.Dock="Right" Style="{StaticResource Switch}" IsChecked="{Binding CloseToTray, Mode=TwoWay}" VerticalAlignment="Top"/>
+                            <StackPanel Margin="0,0,16,0">
+                                <TextBlock Text="FECHAR PARA A BANDEJA" Style="{StaticResource SecTitle}"/>
+                                <TextBlock Text="O X da janela só esconde o Hertzo: o replay e os atalhos continuam valendo. Para fechar de vez, clique com o botão direito no ícone › Sair do Hertzo."
+                                           Style="{StaticResource Body}" FontSize="12.5" LineHeight="18" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Grid>
+                </Grid>
+            </ui:Plate>
             <!-- ================= CLIPES ================= -->
-            <StackPanel Grid.Row="4">
+            <StackPanel Grid.Row="5">
                 <ui:Plate Reveal="Focus" Delay="200" Visibility="{Binding NoClips, Converter={StaticResource BoolVis}}" Margin="0,0,0,18">
                     <Grid>
                         <Grid.ColumnDefinitions>

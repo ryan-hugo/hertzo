@@ -71,6 +71,8 @@ public sealed class ClipSettings
     public int OutputHeight { get; set; }            // 0 = nativa; 1080; 720
     public bool OnlyInGame { get; set; } = true;
     public bool Armed { get; set; }
+    /// <summary>Liga o replay sempre que o Hertzo abre, mesmo que tenha sido desligado antes.</summary>
+    public bool AutoArm { get; set; }
     public string Folder { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "Hertzo");
     public bool FolderPerGame { get; set; }
     public HotkeySpec SaveKey { get; set; } = new(HotkeySpec.Ctrl | HotkeySpec.Shift, 0x79);   // F10
@@ -107,7 +109,8 @@ public sealed class ClipSettings
     {
         try
         {
-            var s = File.Exists(FilePath) ? JsonSerializer.Deserialize<ClipSettings>(File.ReadAllText(FilePath)) ?? new() : new();
+            // Nunca volta aos padrões em silêncio: se o arquivo estiver ilegível, usa a cópia de segurança (.bak).
+            var s = AtomicFile.Load(FilePath, t => JsonSerializer.Deserialize<ClipSettings>(t)) ?? new();
             s.Seconds = Math.Clamp(s.Seconds, MinSeconds, MaxSecondsLimit);
             if (s.Fps is not (30 or 60 or 120)) s.Fps = 60;
             s.SaveKey ??= new(HotkeySpec.Ctrl | HotkeySpec.Shift, 0x79);
@@ -122,12 +125,13 @@ public sealed class ClipSettings
             s.MicVolume = Math.Clamp(s.MicVolume, 0, 200);
             return s;
         }
-        catch { return new(); }
+        catch (Exception ex) { UiHost.Log(ex); return new(); }
     }
 
     public void Save()
     {
-        try { File.WriteAllText(FilePath, JsonSerializer.Serialize(this)); } catch { }
+        try { AtomicFile.WriteAllText(FilePath, JsonSerializer.Serialize(this)); }
+        catch (Exception ex) { UiHost.Log(ex); }
     }
 }
 
@@ -156,7 +160,7 @@ public static class ClipIndex
 
     public static void Save(IEnumerable<ClipInfo> list)
     {
-        try { File.WriteAllText(FilePath, JsonSerializer.Serialize(list.Where(c => File.Exists(c.Path)).ToList())); } catch { }
+        try { AtomicFile.WriteAllText(FilePath, JsonSerializer.Serialize(list.Where(c => File.Exists(c.Path)).ToList())); } catch (Exception ex) { UiHost.Log(ex); }
     }
 }
 

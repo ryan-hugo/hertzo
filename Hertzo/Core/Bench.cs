@@ -343,16 +343,14 @@ public static class BenchStore
 
     public static List<BenchRun> Load()
     {
-        try { return File.Exists(FilePath) ? JsonSerializer.Deserialize<List<BenchRun>>(File.ReadAllText(FilePath)) ?? [] : []; }
-        catch { return []; }
+        try { return AtomicFile.Load(FilePath, t => JsonSerializer.Deserialize<List<BenchRun>>(t)) ?? []; }
+        catch (Exception ex) { UiHost.Log(ex); return []; }
     }
 
     public static void Save(IEnumerable<BenchRun> runs)
     {
         var list = runs.OrderByDescending(r => r.When).Take(200).ToList();
-        var tmp = FilePath + ".tmp";
-        File.WriteAllText(tmp, JsonSerializer.Serialize(list, Json));
-        File.Move(tmp, FilePath, true);
+        AtomicFile.WriteAllText(FilePath, JsonSerializer.Serialize(list, Json));
     }
 }
 

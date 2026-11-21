@@ -18,6 +18,15 @@ public partial class MainWindow : Window
         SourceInitialized += (_, _) => StyleFrame();
         StateChanged += (_, _) => Root.Margin = WindowState == WindowState.Maximized ? new Thickness(7) : new Thickness(0);
         PreviewKeyDown += OnKey;
+        Closing += (_, e) =>
+        {
+            // Fechar a janela deixa o Hertzo na bandeja: o replay continua gravando e os atalhos continuam valendo.
+            if (App.Exiting || !AppSettings.Current.CloseToTray) return;
+            e.Cancel = true;
+            Hide();
+            Hertzo.Ui.Tray.HintOnce();
+        };
+        Closed += (_, _) => App.ExitApp();
     }
 
     private void StyleFrame()
